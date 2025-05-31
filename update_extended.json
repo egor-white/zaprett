@@ -1,6 +1,6 @@
 {
-	"version": "4.0",
-	"versionCode": 40,
-	"zipUrl": "https://github.com/egor-white/zaprett/releases/download/4.0.0/zaprett-extended.zip",
+	"version": "4.1",
+	"versionCode": 41,
+	"zipUrl": "https://github.com/egor-white/zaprett/releases/download/4.1.0/zaprett-extended.zip",
 	"changelog": "https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/changelog.md"
 }
