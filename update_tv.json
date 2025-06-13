@@ -1,6 +1,6 @@
 {
-	"version": "4.1",
-	"versionCode": 41,
-	"zipUrl": "https://github.com/egor-white/zaprett/releases/download/4.1.0/zaprett-tv.zip",
+	"version": "4.2",
+	"versionCode": 42,
+	"zipUrl": "https://github.com/egor-white/zaprett/releases/download/4.2.0/zaprett-tv.zip",
 	"changelog": "https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/changelog.md"
 }
