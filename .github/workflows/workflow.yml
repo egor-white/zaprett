@@ -42,10 +42,6 @@ jobs:
           rm -rf "${ZAPRET_DIR}"
           rm zapret-latest.zip
 
-      - name: Check files
-        run: |
-         ls -la zapret-latest
-         ls -la $GITHUB_WORKSPACE
       - name: Copy files to dirs
         run: |
         #copy nfqws and zaprett
