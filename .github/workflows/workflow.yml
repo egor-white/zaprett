@@ -62,7 +62,7 @@ jobs:
           cp zapret-latest/binaries/linux-mipsel/nfqws zaprett/system/bin/nfqws_mipsel
           #cp src/bin/zaprett zaprett/system/bin/
 
-          cp -r src/* zaprett/
+          cp -a src/* zaprett/
 
           #copy all files to another distributions
           cp -r zaprett/* zaprett-extended/
