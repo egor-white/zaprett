@@ -4,15 +4,21 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag for the release'
+        description: 'Tag for the release (x.x.x)'
         required: true
         type: string
+      version:
+        description: 'Module version (x.x)'
+        required: true
+        type: string
+      version_code:
+        description: 'Module version code (xx)'
       release_name:
         description: 'Release Name'
         required: false
         type: string
-      release_notes:
-        description: 'Release Notes'
+      release_changes:
+        description: 'Release Changes'
         required: true
         type: string
 
@@ -73,6 +79,49 @@ jobs:
           cp lists/list-discord.txt zaprett-extended/system/etc/zaprett/lists/
 
           cp lists/list-extended.txt zaprett-extended/system/etc/zaprett/lists/
+      
+      - name: Create module.prop
+        run: |
+          cat > zaprett/module.prop <<EOF
+          id=zaprett
+          name=zaprett
+          version=${{ inputs.version }}
+          versionCode=${{ inputs.version_code }}
+          author=egor-white, Huananzhi X99, Cherret
+          description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
+          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update.json
+          EOF
+          
+          cat > zaprett-extended/module.prop <<EOF
+          id=zaprett
+          name=zaprett-extended
+          version=${{ inputs.version }}
+          versionCode=${{ inputs.version_code }}
+          author=egor-white, Huananzhi X99, Cherret
+          description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
+          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-extended.json
+          EOF
+          
+          cat > zaprett-tv/module.prop <<EOF
+          id=zaprett
+          name=zaprett-tv
+          version=${{ inputs.version }}
+          versionCode=${{ inputs.version_code }}
+          author=egor-white, Huananzhi X99, Cherret
+          description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
+          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-tv.json
+          EOF
+          cat zaprett/module.prop
+          
       - name: Tree files
         run: |
           tree zaprett/ zaprett-extended/ zaprett-tv/
+      - name: Create archives
+        run: |
+          zip zaprett.zip zaprett/* -r
+          zip zaprett-extended.zip zaprett-extended/* -r
+          zip zaprett-tv.zip zaprett-tv/* -r
+          
+          mv zaprett.zip out/
+          mv zaprett-extended.zip out/
+          mv zaprett-tv.zip out/
