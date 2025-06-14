@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Make build dirs
-        run: mkdir -p zaprett-default/system/bin zaprett-extended/system/bin zaprett-tv/system/bin zaprett-default/system/etc zapret-latest out lists
+        run: mkdir -p zaprett-default/system/bin zaprett-extended/system/bin zaprett-tv/system/bin zaprett-default/system/etc/zaprett/lists zapret-latest out lists zapret-extended/system/etc/zaprett/lists zapret-tv/system/etc/zaprett/lists 
 
       - name: Download latest zapret binaries
         run: |
@@ -59,10 +59,20 @@ jobs:
           #copy all files to another distributions
           cp -r zaprett-default/* zaprett-extended/
           cp -r zaprett-default/* zaprett-tv/
-      - name: Download actual lists
+      - name: Download and copy actual lists
         run: |
-          
+          wget https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/lists/list-youtube.txt -O lists/list-youtube.txt
+          wget https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/lists/list-discord.txt -O lists/list-discord.txt
+          wget https://raw.githubusercontent.com/CherretGit/zaprett-hosts-repo/refs/heads/main/lists/list-extended.txt -O lists/list-extended.txt
 
+          cp lists/list-youtube.txt zaprett-default/system/etc/zaprett/lists/
+          cp lists/list-youtube.txt zaprett-extended/system/etc/zaprett/lists/
+          cp lists/list-youtube.txt zaprett-tv/system/etc/zaprett/lists/
+
+          cp lists/list-discord.txt zaprett-default/system/etc/zaprett/lists/
+          cp lists/list-discord.txt zaprett-extended/system/etc/zaprett/lists/
+
+          cp lists/list-extended.txt zaprett-extended/system/etc/zaprett/lists/
       - name: Tree files
         run: |
           tree zaprett-default/ zaprett-extended/ zaprett-tv/
