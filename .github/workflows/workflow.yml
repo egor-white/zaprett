@@ -137,8 +137,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update changelog
-        run: |
-          echo "${inputs.release_changes}" > changelog.md
+        run: echo "${{ inputs.release_changes}}" > changelog.md
           
       - name: Update update.json
         run: |
