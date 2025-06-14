@@ -145,7 +145,7 @@ jobs:
           cat > update.json <<EOF
           {
             "version": "${{ inputs.version }}",
-            "versionCode": ${{ inputs.versionCode }},
+            "versionCode": ${{ inputs.version_code }},
             "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release_tag }}/zaprett.zip",
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
@@ -153,7 +153,7 @@ jobs:
           cat > update_extended.json <<EOF
           {
             "version": "${{ inputs.version }}",
-            "versionCode": ${{ inputs.versionCode }},
+            "versionCode": ${{ inputs.version_code }},
             "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release_tag }}/zaprett-extended.zip",
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
@@ -161,7 +161,7 @@ jobs:
           cat > update_tv.json <<EOF
           {
             "version": "${{ inputs.version }}",
-            "versionCode": ${{ inputs.versionCode }},
+            "versionCode": ${{ inputs.version_code }},
             "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release_tag }}/zaprett-tv.zip",
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
