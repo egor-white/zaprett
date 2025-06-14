@@ -173,5 +173,4 @@ jobs:
           file_pattern: 'update.json update_extended.json update_tv.json changelog.md'
       - name: Send bot post
         run: |
-          text="🔄 <b>Обновление модуля</b> ${{ inputs.version }}\n\n📋 Изменения: ${{ inputs.release_changes }}\n\n⬇️ <a href='https://github.com/${{ github.repository }}/releases/tag/${{ inputs.tag }}'>Скачать</a>"
-          curl https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage?chat_id=1446986479\&text=$text
+          curl https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage?chat_id=1446986479\&text="🔄 <b>Обновление модуля</b> ${{ inputs.version }}\n\n📋 Изменения: ${{ inputs.release_changes }}\n\n⬇️ <a href='https://github.com/${{ github.repository }}/releases/tag/${{ inputs.tag }}'>Скачать</a>"\&parse_mode=HTML
