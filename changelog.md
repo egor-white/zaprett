@@ -1,1 +1,1 @@
-test
+Переработка customize.sh
