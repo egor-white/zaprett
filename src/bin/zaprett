@@ -1,0 +1,103 @@
+#!/system/bin/sh
+source /sdcard/zaprett/config
+
+clear_iptables_rules() {
+    iptables -t mangle -D POSTROUTING -j NFQUEUE --queue-num 200 --queue-bypass 2>/dev/null
+    iptables -t mangle -D PREROUTING -j NFQUEUE --queue-num 200 --queue-bypass 2>/dev/null
+    iptables -t filter -D FORWARD -j NFQUEUE --queue-num 200 --queue-bypass 2>/dev/null
+}
+
+
+if [ "$1" == "start" ]; then
+    rm -f /data/adb/modules/zaprett/tmp/*
+    echo "Starting zaprett..."; 
+hostlist=""
+for itm in $(echo "$activelists" | tr ',' ' ' | sort -u); do
+    if [ -f "$itm" ]; then
+        dst="/data/adb/modules/zaprett/tmp/$(basename "$itm")"
+        cp "$itm" "$dst"
+        case "$hostlist" in
+            *"--hostlist=$dst"*) ;;
+            *) hostlist="$hostlist --hostlist=$dst" ;;
+        esac
+    fi
+done
+
+config=""
+if [[ -n "$strategy" && -f "$strategy" ]]; then
+    config="$(eval "echo \"$(<"$strategy")\"")"
+fi
+
+if [[ -z "$config" ]]; then
+    config="--filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new"
+    config="$config --filter-tcp=443 $hostlist --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new"
+    config="$config --filter-tcp=80,443 --dpi-desync=fake,disorder2 --dpi-desync-repeats=6 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new"
+    config="$config --filter-udp=50000-50100 --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-fake-quic=0xC30000000108 --new"
+    config="$config --filter-udp=443 $hostlist --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new"
+    config="$config --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist"
+    
+fi
+	sysctl net.netfilter.nf_conntrack_tcp_be_liberal=1 > /dev/null
+	
+    iptables -t mangle -I POSTROUTING -j NFQUEUE --queue-num 200 --queue-bypass
+    iptables -t mangle -I PREROUTING -j NFQUEUE --queue-num 200 --queue-bypass
+    iptables -t filter -A FORWARD -j NFQUEUE --queue-num 200 --queue-bypass
+
+    nfqws --uid=0:0 --qnum=200 $config > /dev/null & 
+    echo "zaprett service started!"; return 0;
+    fi
+
+if [ "$1" == "stop" ]; then
+clear_iptables_rules
+kill $(pidof nfqws);
+rm -f /data/adb/modules/zaprett/tmp/*
+echo "zaprett service stopped!"; return 0; fi;
+
+if [ "$1" == "status" ]; then
+	pidof "nfqws" > /dev/null && echo "zaprett is working" || echo "zaprett is stopped"
+fi
+
+if [ "$1" == "restart" ]; then
+    echo "Stopping zaprett..."
+    clear_iptables_rules
+    kill "$(pidof nfqws)" 2>/dev/null
+    rm -f /data/adb/modules/zaprett/tmp/*
+    echo "Starting zaprett..."
+hostlist=""
+for itm in $(echo "$activelists" | tr ',' ' ' | sort -u); do
+    if [ -f "$itm" ]; then
+        dst="/data/adb/modules/zaprett/tmp/$(basename "$itm")"
+        cp "$itm" "$dst"
+        case "$hostlist" in
+            *"--hostlist=$dst"*) ;;
+            *) hostlist="$hostlist --hostlist=$dst" ;;
+        esac
+    fi
+done
+
+config=""
+if [[ -n "$strategy" && -f "$strategy" ]]; then
+    config="$(eval "echo \"$(<"$strategy")\"")"
+fi
+
+if [[ -z "$config" ]]; then
+    config="--filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new"
+    config="$config --filter-tcp=443 $hostlist --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new"
+    config="$config --filter-tcp=80,443 --dpi-desync=fake,disorder2 --dpi-desync-repeats=6 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new"
+    config="$config --filter-udp=50000-50100 --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-fake-quic=0xC30000000108 --new"
+    config="$config --filter-udp=443 $hostlist --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new"
+    config="$config --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist"
+
+fi
+    sysctl net.netfilter.nf_conntrack_tcp_be_liberal=1 > /dev/null
+
+    iptables -t mangle -I POSTROUTING -j NFQUEUE --queue-num 200 --queue-bypass
+    iptables -t mangle -I PREROUTING -j NFQUEUE --queue-num 200 --queue-bypass
+    iptables -t filter -A FORWARD -j NFQUEUE --queue-num 200 --queue-bypass
+
+    nfqws --uid=0:0 --qnum=200 $config > /dev/null &
+    echo "zaprett service restarted!"
+fi
+if [[ -z $1 ]]; then
+	echo "zaprett installed. Telegram: t.me/zaprett_module"
+fi
