@@ -49,14 +49,13 @@ case "$arch" in
         abort
         ;;
 esac
-cp $MODPATH/system/bin/$nfqws /bin/nfqws
-cp $MODPATH/system/bin/zaprett /bin/zaprett
+mv $MODPATH/system/bin/$nfqws /system/bin/nfqws
+rm nfqws_*
 
 ui_print "Setting permissions..."
 chmod 777 /sdcard/zaprett; chmod 777 $MODPATH/service.sh
 
 ui_print "Cleaning temp files..."
 rm -rf $MODPATH/system/etc/zaprett
-rm -rf $MODPATH/system/bin
 
 ui_print "Installation done. Telegram chat: https://t.me/zaprett_module"
