@@ -40,9 +40,11 @@ jobs:
         run: |
           unzip -o zapret-latest.zip
           ZAPRET_DIR=$(find . -maxdepth 1 -type d -name 'zapret-v*' | head -n 1)
-          if [ -n "$ZAPRET_DIR" ] && [ -d "$ZAPRET_DIR" ]; then
-            echo "Found zapret directory: $ZAPRET_DIR"
-          mv "$ZAPRET_DIR"/* zapret-latest/
+          if [ "$(ls -A "$ZAPRET_DIR")" ]; then
+            mv "$ZAPRET_DIR"/* zapret-latest/
+          else
+           echo "Warning: $ZAPRET_DIR is empty"
+          fi
           rm -rf "${ZAPRET_DIR}"
           rm zapret-latest.zip
       - name: Debug
