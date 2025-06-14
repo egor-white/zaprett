@@ -180,6 +180,7 @@ jobs:
             📋 Изменения: ${{ inputs.release_changes }}
 
             ⬇️ <a href='https://github.com/egor-white/zaprett/releases/tag/${{ inputs.tag }}'>Скачать</a>
+            ℹ️ @zaprett_module
         run: |
           curl -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
             -d chat_id=-1002531270265 \
