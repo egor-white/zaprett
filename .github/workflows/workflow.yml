@@ -56,7 +56,7 @@ jobs:
 
           cp src/customize.sh zaprett-default/
           cp src/service.sh zaprett-default/
-          cp src/hosts zaprett-default/system/etc/
+          cp src/etc zaprett-default/system/etc
 
           #copy all files to another distributions
           cp -r zaprett-default/system/* zaprett-extended/system/
