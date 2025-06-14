@@ -28,7 +28,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Prepare
-        run: mkdir -p zaprett zaprett-extended zaprett-tv out
+        run: mkdir -p zaprett zaprett-extended zaprett-tv zapret-latest out
 
       # Runs a set of commands using the runners shell
       - name: Download latest zapret binaries
