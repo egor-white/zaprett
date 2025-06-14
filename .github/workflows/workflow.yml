@@ -62,4 +62,4 @@ jobs:
 
       - name: Tree files 
         run: |
-          tree zaprett-default/
+          tree /F zaprett-default/ zaprett-extended/ zaprett-tv/
