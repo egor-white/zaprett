@@ -54,9 +54,7 @@ jobs:
           cp zapret-latest/binaries/linux-mipsel/nfqws zaprett-default/system/bin/nfqws_mipsel
           cp src/zaprett zaprett-default/system/bin/
 
-          cp src/customize.sh zaprett-default/
-          cp src/service.sh zaprett-default/
-          cp src/etc zaprett-default/system/etc
+          cp -r src/* zaprett-default/
 
           #copy all files to another distributions
           cp -r zaprett-default/system/* zaprett-extended/system/
