@@ -51,6 +51,7 @@ case "$arch" in
 esac
 mv $MODPATH/system/bin/$nfqws $MODPATH/system/bin/nfqws
 rm nfqws_*
+mkdir $MODPATH/tmp
 
 ui_print "Setting permissions..."
 chmod 777 /sdcard/zaprett; chmod 777 $MODPATH/service.sh
