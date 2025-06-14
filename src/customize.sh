@@ -49,7 +49,7 @@ case "$arch" in
         abort
         ;;
 esac
-mv $MODPATH/system/bin/$nfqws /system/bin/nfqws
+mv $MODPATH/system/bin/$nfqws $MODPATH/system/bin/nfqws
 rm nfqws_*
 
 ui_print "Setting permissions..."
