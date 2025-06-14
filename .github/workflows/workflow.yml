@@ -50,4 +50,8 @@ jobs:
       - name: Copy binaries to dirs
         run: |
          cp zapret-latest/binaries/android-arm/nfqws zaprett/system/bin/nfqws_arm32
-         
+         cp zapret-latest/binaries/android-arm64/nfqws zaprett/system/bin/nfqws_arm64
+         cp zapret-latest/binaries/android-x86/nfqws zaprett/system/bin/nfqws_x86
+         cp zapret-latest/binaries/android-x86_64/nfqws zaprett/system/bin/nfqws_x86_64
+         cp zapret-latest/binaries/linux-mips/nfqws zaprett/system/bin/nfqws_mips
+         cp zapret-latest/binaries/linux-mipsel/nfqws zaprett/system/bin/nfqws_mipsel
