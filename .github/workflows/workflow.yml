@@ -13,9 +13,11 @@ on:
         type: string
       version_code:
         description: 'Module version code (xx)'
+        required: true
+        type: string
       release_name:
         description: 'Release Name'
-        required: false
+        required: true
         type: string
       release_changes:
         description: 'Release Changes'
@@ -111,7 +113,6 @@ jobs:
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-tv.json
           EOF
-          cat zaprett/module.prop
           
       - name: Tree files
         run: |
@@ -125,3 +126,55 @@ jobs:
           mv zaprett.zip out/
           mv zaprett-extended.zip out/
           mv zaprett-tv.zip out/
+      
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: ${{ inputs.release_name }}
+          body: ${{ inputs.release_changes }}
+          files: out/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update changelog
+        run: |
+          echo ${{ inputs.release_changes}} > changelog.md
+          
+      - name: Update update.json
+        run: |
+          cat > update.json <<EOF
+          {
+            "version": "${{ inputs.version }}",
+            "versionCode": ${{ inputs.versionCode }},
+            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release_tag }}/zaprett.zip",
+            "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
+          }
+          EOF
+          cat > update_extended.json <<EOF
+          {
+            "version": "${{ inputs.version }}",
+            "versionCode": ${{ inputs.versionCode }},
+            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release_tag }}/zaprett-extended.zip",
+            "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
+          }
+          EOF
+          cat > update_tv.json <<EOF
+          {
+            "version": "${{ inputs.version }}",
+            "versionCode": ${{ inputs.versionCode }},
+            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.release_tag }}/zaprett-tv.zip",
+            "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
+          }
+          EOF
+      - name: Настроить git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Закоммитить изменения
+        run: |
+          git add update.json update_extended.json update_tv.json changelog.md
+          git commit -m "update update.json and changelog" || echo "Нет изменений для коммита"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
