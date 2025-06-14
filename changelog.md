@@ -1,1 +1,1 @@
-Переработка customize.sh
+Изменение логики customize.sh
