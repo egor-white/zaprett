@@ -52,7 +52,7 @@ jobs:
           cp zapret-latest/binaries/android-x86_64/nfqws zaprett-default/system/bin/nfqws_x86_64
           cp zapret-latest/binaries/linux-mips/nfqws zaprett-default/system/bin/nfqws_mips
           cp zapret-latest/binaries/linux-mipsel/nfqws zaprett-default/system/bin/nfqws_mipsel
-          cp zaprett zaprett-default/system/bin/
+          cp src/zaprett zaprett-default/system/bin/
 
           cp src/customize.sh zaprett-default/
           cp src/service.sh zaprett-default/
