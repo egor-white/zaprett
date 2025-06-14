@@ -15,6 +15,7 @@ on:
         description: 'Release Notes'
         required: true
         type: string
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,21 +42,22 @@ jobs:
           fi
           rm -rf "${ZAPRET_DIR}"
           rm zapret-latest.zip
+
       - name: Copy files to dirs
         run: |
-        #copy nfqws and zaprett
-         cp zapret-latest/binaries/android-arm/nfqws zaprett-default/system/bin/nfqws_arm32
-         cp zapret-latest/binaries/android-arm64/nfqws zaprett-default/system/bin/nfqws_arm64
-         cp zapret-latest/binaries/android-x86/nfqws zaprett-default/system/bin/nfqws_x86
-         cp zapret-latest/binaries/android-x86_64/nfqws zaprett-default/system/bin/nfqws_x86_64
-         cp zapret-latest/binaries/linux-mips/nfqws zaprett-default/system/bin/nfqws_mips
-         cp zapret-latest/binaries/linux-mipsel/nfqws zaprett-default/system/bin/nfqws_mipsel
-         cp zaprett zaprett-default/system/bin/
-         
-         cp src/customize.sh zaprett-default/
-         cp src/service.sh zaprett-default/
-         cp src/hosts zaprett-default/system/etc/
+          #copy nfqws and zaprett
+          cp zapret-latest/binaries/android-arm/nfqws zaprett-default/system/bin/nfqws_arm32
+          cp zapret-latest/binaries/android-arm64/nfqws zaprett-default/system/bin/nfqws_arm64
+          cp zapret-latest/binaries/android-x86/nfqws zaprett-default/system/bin/nfqws_x86
+          cp zapret-latest/binaries/android-x86_64/nfqws zaprett-default/system/bin/nfqws_x86_64
+          cp zapret-latest/binaries/linux-mips/nfqws zaprett-default/system/bin/nfqws_mips
+          cp zapret-latest/binaries/linux-mipsel/nfqws zaprett-default/system/bin/nfqws_mipsel
+          cp zaprett zaprett-default/system/bin/
 
-         #copy all files to another distributions
-         cp zaprett-default/system/* zaprett-extended/system/
-         cp zaprett-default/system/* zaprett-tv/system/
+          cp src/customize.sh zaprett-default/
+          cp src/service.sh zaprett-default/
+          cp src/hosts zaprett-default/system/etc/
+
+          #copy all files to another distributions
+          cp zaprett-default/system/* zaprett-extended/system/
+          cp zaprett-default/system/* zaprett-tv/system/
