@@ -1,37 +1,11 @@
 #!/system/bin/sh
 source /sdcard/zaprett/config
-arch=$(uname -m)
 
 clear_iptables_rules() {
     iptables -t mangle -D POSTROUTING -j NFQUEUE --queue-num 200 --queue-bypass 2>/dev/null
     iptables -t mangle -D PREROUTING -j NFQUEUE --queue-num 200 --queue-bypass 2>/dev/null
     iptables -t filter -D FORWARD -j NFQUEUE --queue-num 200 --queue-bypass 2>/dev/null
 }
-
-case "$arch" in
-    "x86_64")
-        nfqws="nfqws_x86_64"
-        ;;
-    "i386"|"i686")
-        nfqws="nfqws_x86"
-        ;;
-    "armv7l"|"arm")
-        nfqws="nfqws_arm32"
-        ;;
-    "aarch64"|"armv8l")
-        nfqws="nfqws_arm64"
-        ;;
-    "mips")
-        nfqws="nfqws_mips"
-        ;;
-    "mipsel")
-        nfqws="nfqws_mipsel"
-        ;;
-    *)
-        echo "Unknown arch: $arch"
-        exit 1
-        ;;
-esac
 
 if [ "$1" == "start" ]; then
     rm -f /data/adb/modules/zaprett/tmp/*
@@ -68,24 +42,24 @@ fi
     iptables -t mangle -I PREROUTING -j NFQUEUE --queue-num 200 --queue-bypass
     iptables -t filter -A FORWARD -j NFQUEUE --queue-num 200 --queue-bypass
 
-    $nfqws --uid=0:0 --qnum=200 $config > /dev/null & 
+    nfqws --uid=0:0 --qnum=200 $config > /dev/null & 
     echo "zaprett service started!"; return 0;
     fi
 
 if [ "$1" == "stop" ]; then
 clear_iptables_rules
-kill $(pidof $nfqws);
+kill $(pidof nfqws);
 rm -f /data/adb/modules/zaprett/tmp/*
 echo "zaprett service stopped!"; return 0; fi;
 
 if [ "$1" == "status" ]; then
-	pidof "$nfqws" > /dev/null && echo "zaprett is working" || echo "zaprett is stopped"
+	pidof "nfqws" > /dev/null && echo "zaprett is working" || echo "zaprett is stopped"
 fi
 
 if [ "$1" == "restart" ]; then
     echo "Stopping zaprett..."
     clear_iptables_rules
-    kill "$(pidof $nfqws)" 2>/dev/null
+    kill "$(pidof nfqws)" 2>/dev/null
     rm -f /data/adb/modules/zaprett/tmp/*
     echo "Starting zaprett..."
 hostlist=""
@@ -120,7 +94,7 @@ fi
     iptables -t mangle -I PREROUTING -j NFQUEUE --queue-num 200 --queue-bypass
     iptables -t filter -A FORWARD -j NFQUEUE --queue-num 200 --queue-bypass
 
-    $nfqws --uid=0:0 --qnum=200 $config > /dev/null &
+    nfqws --uid=0:0 --qnum=200 $config > /dev/null &
     echo "zaprett service restarted!"
 fi
 if [[ -z $1 ]]; then
