@@ -166,15 +166,23 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
-      - name: Настроить git
+      - name: Configure git
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-      - name: Закоммитить изменения
+      - name: Commit changelog and update.json
         run: |
           git add update.json update_extended.json update_tv.json changelog.md
           git commit -m "update update.json and changelog" || echo "Нет изменений для коммита"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Send bot post
+        run: |
+          text="
+          🔄 <b>Обновление модуля</b> ${{ inputs.version }}\n\n
+📋 Изменения: ${{ inputs.release_changes }}\n\n
+⬇️ <a href="https://github.com/${{ github.repository }}/releases/tag/${{ inputs.tag }}
+">Скачать</a>"
+          curl https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage?chat_id=1446986479\&text=$text
