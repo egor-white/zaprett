@@ -1,6 +1,6 @@
 #!/system/bin/sh
 while [ -z "$(getprop sys.boot_completed)" ]; do sleep 2; done
-sleep 1
+sleep 10
 source /storage/emulated/0/zaprett/config
 if [ "$autorestart" = "true" ]; then
   su -c "zaprett start"
