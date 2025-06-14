@@ -41,7 +41,6 @@ jobs:
           fi
           rm -rf "${ZAPRET_DIR}"
           rm zapret-latest.zip
-
       - name: Copy files to dirs
         run: |
         #copy nfqws and zaprett
