@@ -177,8 +177,4 @@ jobs:
       -d chat_id=1446986479 \
       -d parse_mode=HTML \
       -d disable_web_page_preview=true \
-      --data-urlencode "text=🔄 <b>Обновление модуля</b> ${{ inputs.version }}
-
-📋 Изменения: ${{ inputs.release_changes }}
-
-⬇️ <a href='https://github.com/egor-white/zaprett/releases/tag/${{ inputs.tag }}'>Скачать</a>"
+      --data-urlencode "text=🔄 <b>Обновление модуля</b> ${{ inputs.version }}\n\n📋 Изменения: ${{ inputs.release_changes }}\n\n⬇️ <a href='https://github.com/egor-white/zaprett/releases/tag/${{ inputs.tag }}'>Скачать</a>"
