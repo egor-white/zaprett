@@ -119,10 +119,9 @@ jobs:
           tree zaprett/ zaprett-extended/ zaprett-tv/
       - name: Create archives
         run: |
-          zip zaprett.zip zaprett/* -r
-          zip zaprett-extended.zip zaprett-extended/* -r
-          zip zaprett-tv.zip zaprett-tv/* -r
-          
+          cd zaprett && zip -r ../zaprett.zip . && cd ..
+          cd zaprett-extended && zip -r ../zaprett-extended.zip . && cd ..
+          cd zaprett-tv && zip -r ../zaprett-tv.zip . && cd ..       
           mv zaprett.zip out/
           mv zaprett-extended.zip out/
           mv zaprett-tv.zip out/
