@@ -39,6 +39,11 @@ jobs:
       - name: Unzip zapret binaries
         run: |
           unzip -o zapret-latest.zip
+          ZAPRET_DIR=$(find . -maxdepth 1 -type d -name 'zapret-v*' | head -n 1)
+          if [ -n "$ZAPRET_DIR" ] && [ -d "$ZAPRET_DIR" ]; then
+            echo "Found zapret directory: $ZAPRET_DIR"
+          mv "$ZAPRET_DIR"/* zapret-latest/
+          rm -rf "${ZAPRET_DIR}"
           rm zapret-latest.zip
       - name: Debug
         run: |
