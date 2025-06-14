@@ -62,6 +62,6 @@ jobs:
           cp -r zaprett-default/system/* zaprett-extended/system/
           cp -r zaprett-default/system/* zaprett-tv/system/
 
-      - name: Copy files to dirs
+      - name: Tree files 
         run: |
           tree zaprett-default/
