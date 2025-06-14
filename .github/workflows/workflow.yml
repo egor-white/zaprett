@@ -59,7 +59,10 @@ jobs:
           #copy all files to another distributions
           cp -r zaprett-default/* zaprett-extended/
           cp -r zaprett-default/* zaprett-tv/
+      - name: Download actual lists
+        run: |
+          
 
-      - name: Tree files 
+      - name: Tree files
         run: |
           tree zaprett-default/ zaprett-extended/ zaprett-tv/
