@@ -49,7 +49,8 @@ case "$arch" in
         abort
         ;;
 esac
-cp $nfqws /bin/nfqws
+cp $MODPATH/system/bin/$nfqws /bin/nfqws
+cp $MODPATH/system/bin/zaprett /bin/zaprett
 
 ui_print "Setting permissions..."
 chmod 777 /sdcard/zaprett; chmod 777 $MODPATH/service.sh
