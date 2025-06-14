@@ -166,18 +166,11 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
-      - name: Configure git
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-      - name: Commit changelog and update.json
-        run: |
-          git add update.json update_extended.json update_tv.json changelog.md
-          git commit -m "update update.json and changelog" || echo "Нет изменений для коммита"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit jsons and changelog
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Update update's.json and changelog"
+          file_pattern: 'update.json update_extended.json update_tv.json changelog.md'
       - name: Send bot post
         run: |
           text="🔄 <b>Обновление модуля</b> ${{ inputs.version }}\n\n📋 Изменения: ${{ inputs.release_changes }}\n\n⬇️ <a href='https://github.com/${{ github.repository }}/releases/tag/${{ inputs.tag }}'>Скачать</a>"
