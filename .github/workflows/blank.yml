@@ -1,0 +1,49 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build module
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for the release'
+        required: true
+        type: string
+      release_name:
+        description: 'Release Name'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release Description'
+        required: true
+        type: string
+jobs:
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      # Runs a single command using the runners shell
+      - name: Prepare
+        run: mkdir -p zaprett zaprett-extended zaprett-tv out
+
+      # Runs a set of commands using the runners shell
+      - name: Download latest zapret binaries
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/bol-van/zapret/releases/latest)
+          DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | grep -o 'browser_download_url.*zapret-v.*\.zip"' | cut -d'"' -f3)
+          wget $DOWNLOAD_URL -O zapret-latest.zip
+      - name: Unzip zapret binaries
+        run: |
+          unzip -o zapret-latest.zip
+          rm zapret-latest.zip
+      - name: Debug
+        run: |
+         ls -la zapret-latest
+         ls -la $GITHUB_WORKSPACE
+      
+        
+             
