@@ -15,10 +15,6 @@ on:
         description: 'Release Notes'
         required: true
         type: string
-      new_changelog:
-        description: 'Update Changelog'
-        required: true
-        type: string
 jobs:
   build:
     runs-on: ubuntu-latest
