@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Make build dirs
-        run: mkdir -p zaprett-default/system/bin zaprett-extended/system/bin zaprett-tv/system/bin zaprett-default/system/etc zapret-latest out
+        run: mkdir -p zaprett-default/system/bin zaprett-extended/system/bin zaprett-tv/system/bin zaprett-default/system/etc zapret-latest out lists
 
       - name: Download latest zapret binaries
         run: |
