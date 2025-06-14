@@ -59,5 +59,9 @@ jobs:
           cp src/hosts zaprett-default/system/etc/
 
           #copy all files to another distributions
-          cp zaprett-default/system/* zaprett-extended/system/
-          cp zaprett-default/system/* zaprett-tv/system/
+          cp -r zaprett-default/system/* zaprett-extended/system/
+          cp -r zaprett-default/system/* zaprett-tv/system/
+
+      - name: Copy files to dirs
+        run: |
+          tree zaprett-default/
