@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Make build dirs
-        run: mkdir -p zaprett/system/bin zaprett-extended/system/bin zaprett-tv/system/bin zapret-latest out zaprett
+        run: mkdir -p zaprett-default/system/bin zaprett-extended/system/bin zaprett-tv/system/bin zapret-latest out
 
       - name: Download latest zapret binaries
         run: |
@@ -49,9 +49,13 @@ jobs:
 
       - name: Copy binaries to dirs
         run: |
-         cp zapret-latest/binaries/android-arm/nfqws zaprett/system/bin/nfqws_arm32
-         cp zapret-latest/binaries/android-arm64/nfqws zaprett/system/bin/nfqws_arm64
-         cp zapret-latest/binaries/android-x86/nfqws zaprett/system/bin/nfqws_x86
-         cp zapret-latest/binaries/android-x86_64/nfqws zaprett/system/bin/nfqws_x86_64
-         cp zapret-latest/binaries/linux-mips/nfqws zaprett/system/bin/nfqws_mips
-         cp zapret-latest/binaries/linux-mipsel/nfqws zaprett/system/bin/nfqws_mipsel
+         cp zapret-latest/binaries/android-arm/nfqws zaprett-default/system/bin/nfqws_arm32
+         cp zapret-latest/binaries/android-arm64/nfqws zaprett-default/system/bin/nfqws_arm64
+         cp zapret-latest/binaries/android-x86/nfqws zaprett-default/system/bin/nfqws_x86
+         cp zapret-latest/binaries/android-x86_64/nfqws zaprett-default/system/bin/nfqws_x86_64
+         cp zapret-latest/binaries/linux-mips/nfqws zaprett-default/system/bin/nfqws_mips
+         cp zapret-latest/binaries/linux-mipsel/nfqws zaprett-default/system/bin/nfqws_mipsel
+         #cp zaprett zaprett-default/system/bin/
+
+         cp zaprett-default/system/bin/* zaprett-extended/system/bin/
+         cp zaprett-default/system/bin/* zaprett-tv/system/bin/
