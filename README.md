@@ -12,4 +12,6 @@
 На данный момент модуль умеет:
 + Включать, выключать и перезапускать nfqws
 
-Оригинальный автор - [notmalware](https://t.me/notmalware). Отредактировано - [egor-white](https://t.me/cheesedroid), [MT6833](https://t.me/MT6833), [Mineralka](https://t.me/Program_dayn), [Cherret](https://t.me/Cherret).
+
+
+Отредактировано - [egor-white](https://t.me/cheesedroid), [MT6833](https://t.me/MT6833), [Mineralka](https://t.me/Program_dayn), [Cherret](https://t.me/Cherret).
