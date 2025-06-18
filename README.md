@@ -14,4 +14,4 @@
 
 
 
-Создано - [egor-white](https://t.me/cheesedroid), [MT6833](https://t.me/MT6833), [Mineralka](https://t.me/Program_dayn), [Cherret](https://t.me/Cherret).
+Создано - [egor-white](https://t.me/cheesedroid), [Cherret](https://t.me/Cherret), [MT6833](https://t.me/MT6833).
