@@ -103,11 +103,11 @@ if [ "$1" == "help" ]; then
 fi
 
 if [ "$1" == "module-ver" ]; then
-        grep -oP 'version=\K[0-9.]+' /data/adb/modules/zaprett/module.prop
+        grep 'version=' /data/adb/modules/zaprett/module.prop | sed 's/version=//'
 fi
 
 if [ "$1" == "bin-ver" ]; then
-        nfqws --version | grep -oP 'version \Kv[0-9]+'
+        nfqws --version | grep -o 'version v[0-9]\+' | sed 's/version v//'
 fi
 
 if [[ -z $1 ]]; then
