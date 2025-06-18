@@ -100,3 +100,17 @@ fi
 if [[ -z $1 ]]; then
 	echo "zaprett installed. Telegram: t.me/zaprett_module"
 fi
+
+
+if [ "$1" == "help" ]; then
+        echo -e "Помощь по модулю zaprett:\nzaprett start - запуск сервиса\nzaprett stop - остановка сервиса\nzaprett restart - перезапус>
+fi
+
+
+if [ "$1" == "module-ver" ]; then
+        grep -oP 'version=\K[0-9.]+' /data/adb/modules/zaprett/module.prop
+fi
+
+if [ "$1" == "bin-ver" ]; then
+        nfqws --version | grep -oP 'version \Kv[0-9]+'
+fi
