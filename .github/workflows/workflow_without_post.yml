@@ -145,7 +145,7 @@ jobs:
           {
             "version": "${{ inputs.version }}",
             "versionCode": ${{ inputs.version_code }},
-            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}zaprett.zip",
+            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }/}zaprett.zip",
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
@@ -153,7 +153,7 @@ jobs:
           {
             "version": "${{ inputs.version }}",
             "versionCode": ${{ inputs.version_code }},
-            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}zaprett-extended.zip",
+            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/zaprett-extended.zip",
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
@@ -161,7 +161,7 @@ jobs:
           {
             "version": "${{ inputs.version }}",
             "versionCode": ${{ inputs.version_code }},
-            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}zaprett-tv.zip",
+            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/zaprett-tv.zip",
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
