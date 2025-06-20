@@ -1,1 +1,1 @@
-Добавлены команды (zaprett) help, module-ver, bin-ver
+Чуть улучшен скрипт запуска, zaprett status добавлен в help
