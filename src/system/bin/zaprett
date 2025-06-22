@@ -82,7 +82,7 @@ if [ "$1" == "module-ver" ]; then
 fi
 
 if [ "$1" == "bin-ver" ]; then
-        nfqws --version | grep -o 'version v[0-9]\+' | sed 's/version v//'
+        nfqws --version | grep -o 'version v[0-9.]*' | head -n1 | cut -d' ' -f2
 fi
 
 if [[ -z $1 ]]; then
