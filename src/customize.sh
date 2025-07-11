@@ -15,10 +15,15 @@ ui_print "Unpacking archive..."
 unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >&2
 
 ui_print "Creating zaprett directory..."
-mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies; touch /sdcard/zaprett/config
+mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies;
 
 ui_print "Filling configuration file..."
-echo autorestart=true > /sdcard/zaprett/config; echo activelists=/storage/emulated/0/zaprett/lists/list-youtube.txt >> /sdcard/zaprett/config; echo zaprettdir=/sdcard/zaprett >> /sdcard/zaprett/config; echo strategy="" >> /sdcard/zaprett/config
+if [ ! -f "/sdcard/zaprett/config" ]; then
+    echo autorestart=true > /sdcard/zaprett/config
+    echo activelists=/storage/emulated/0/zaprett/lists/list-youtube.txt >> /sdcard/zaprett/config
+    echo zaprettdir=/sdcard/zaprett >> /sdcard/zaprett/config
+    echo strategy="" >> /sdcard/zaprett/config
+fi
 
 ui_print "Copying lists and binaries to /sdcard/zaprett..."
 cp -r $MODPATH/system/etc/zaprett/. /sdcard/zaprett/
@@ -50,7 +55,7 @@ case "$arch" in
         ;;
 esac
 mv $MODPATH/system/bin/$nfqws $MODPATH/system/bin/nfqws
-rm nfqws_*
+rm $MODPATH/system/bin/nfqws_*
 mkdir $MODPATH/tmp
 
 ui_print "Setting permissions..."
