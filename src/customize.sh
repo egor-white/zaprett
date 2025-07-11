@@ -17,7 +17,7 @@ unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >&2
 ui_print "Creating zaprett directory..."
 mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies;
 
-ui_print "Filling configuration file..."
+ui_print "Filling configuration file if not exist..."
 if [ ! -f "/sdcard/zaprett/config" ]; then
     echo autorestart=true > /sdcard/zaprett/config
     echo activelists=/storage/emulated/0/zaprett/lists/list-youtube.txt >> /sdcard/zaprett/config
