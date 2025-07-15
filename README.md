@@ -11,7 +11,8 @@
 
 На данный момент модуль умеет:
 + Включать, выключать и перезапускать nfqws
-
++ Работать с листами и стратегиями
++ Предлагать обновления через Magisk/KSU/KSU Next/APatch
 
 
 Создано - [egor-white](https://t.me/cheesedroid), [Cherret](https://t.me/Cherret), [MT6833](https://t.me/MT6833).
