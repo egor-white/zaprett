@@ -7,7 +7,7 @@
 Требования:
 * Magisk 24.1+
 * Прямые руки
-* Termux или другой эмулятор терминала **И/ИЛИ** [приложение zaprett](https://github.com/egor-white/zaprett-app) **ИЛИ** [ремейк приложения zaprett от cherret](https://github.com/CherretGit/zaprett-app)
+* Termux или другой эмулятор терминала **И/ИЛИ** [приложение zaprett](https://github.com/egor-white/zaprett-app) (не обновляется) **ИЛИ** [ремейк приложения zaprett от cherret](https://github.com/CherretGit/zaprett-app)
 
 На данный момент модуль умеет:
 + Включать, выключать и перезапускать nfqws
