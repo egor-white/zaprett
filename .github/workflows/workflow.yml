@@ -99,7 +99,7 @@ jobs:
           versionCode=${{ inputs.version_code }}
           author=egor-white, Huananzhi X99, Cherret
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
-          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-extended.json
+          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-hosts.json
           EOF
           
           cat > zaprett-tv/module.prop <<EOF
