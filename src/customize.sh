@@ -18,6 +18,7 @@ ui_print "Creating zaprett directory..."
 mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies;
 
 ui_print "Removing old config (config structure changed)..."
+rm -f /sdcard/zaprett/config
 
 ui_print "Filling configuration file if not exist..."
 if [ ! -f "/sdcard/zaprett/config" ]; then
