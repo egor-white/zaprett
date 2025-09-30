@@ -1,11 +1,9 @@
 #!/system/bin/sh
 while [ -z "$(getprop sys.boot_completed)" ]; do sleep 2; done
-sleep 15
-source /storage/emulated/0/zaprett/config
-if [ "$autorestart" = "true" ]; then
+if [ -f "/data/adb/modules/zaprett/autostart" ]; then
   su -c "zaprett start"
   while true; do
       sleep 3600
 	  su -c "zaprett restart"
-  done 
+  done
 fi
