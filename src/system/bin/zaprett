@@ -10,23 +10,32 @@ clear_iptables_rules() {
 start_service() {
     rm -f /data/adb/modules/zaprett/tmp/*
     echo "Starting zaprett..."
-    
+
     hostlist=""
+    ipset=""
+
     case "$list_type" in
         whitelist)
             lists="$active_lists"
+            ipsets="$active_ipsets"
             opt="--hostlist"
+            ipopt="--ipset"
             ;;
         blacklist)
             lists="$active_exclude_lists"
+            ipsets="$active_exclude_ipsets"
             opt="--hostlist-exclude"
+            ipopt="--ipset-exclude"
             ;;
         *)
             echo "Unknown list-type: $list_type" >&2
             lists=""
+            ipsets=""
             opt=""
+            ipopt=""
             ;;
     esac
+
 
     if [ -n "$lists" ] && [ -n "$opt" ]; then
         for itm in $(echo "$lists" | tr ',' ' ' | sort -u); do
@@ -36,6 +45,19 @@ start_service() {
                 case "$hostlist" in
                     *"$opt=$dst"*) ;;
                     *) hostlist="$hostlist $opt=$dst" ;;
+                esac
+            fi
+        done
+    fi
+
+    if [ -n "$ipsets" ] && [ -n "$ipopt" ]; then
+        for ipt in $(echo "$ipsets" | tr ',' ' ' | sort -u); do
+            if [ -f "$ipt" ]; then
+                dst="/data/adb/modules/zaprett/tmp/$(basename "$ipt")"
+                cp "$ipt" "$dst"
+                case "$ipset" in
+                    *"$ipopt=$dst"*) ;;
+                    *) ipset="$ipset $ipopt=$dst" ;;
                 esac
             fi
         done
@@ -54,9 +76,9 @@ start_service() {
         config="$config --filter-udp=443 $hostlist --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new"
         config="$config --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist"
     fi
-    
+
     sysctl net.netfilter.nf_conntrack_tcp_be_liberal=1 > /dev/null
-    
+
     iptables -t mangle -I POSTROUTING -j NFQUEUE --queue-num 200 --queue-bypass
     iptables -t mangle -I PREROUTING -j NFQUEUE --queue-num 200 --queue-bypass
     iptables -t filter -A FORWARD -j NFQUEUE --queue-num 200 --queue-bypass
@@ -92,7 +114,7 @@ if [ "$1" == "restart" ]; then
 fi
 
 if [ "$1" == "help" ]; then
-	echo -e "Помощь по модулю zaprett:\nzaprett start - запуск сервиса\nzaprett stop - остановка сервиса\nzaprett restart - перезапуск сервиса\nzaprett status - статус сервиса\nzaprett module-ver - версия модуля\nzaprett bin-ver - версия бинарных файлов"
+	echo -e "Помощь по модулю zaprett:\nzaprett start - запуск сервиса\nzaprett stop - остановка сервиса\nzaprett restart - перезапуск сервиса\nzaprett status - статус сервиса\nzaprett module-ver - версия модуля\nzaprett bin-ver - версия бинарных файлов\nzaprett autostart - переключение автозапуска модуля\nzaprett get-autostart - получить активен ли автозапуск"
 fi
 
 if [ "$1" == "module-ver" ]; then
@@ -101,6 +123,26 @@ fi
 
 if [ "$1" == "bin-ver" ]; then
         nfqws --version | grep -o 'version v[0-9.]*' | head -n1 | cut -d' ' -f2
+fi
+
+if [ "$1" == "autostart" ]; then
+    FILE="/data/adb/modules/zaprett/autostart"
+    if [ -f "$FILE" ]; then
+        rm "$FILE"
+        echo "false"
+    else
+        touch "$FILE"
+        echo "true"
+    fi
+fi
+
+if [ "$1" == "get-autostart" ]; then
+    FILE="/data/adb/modules/zaprett/autostart"
+    if [ -f "$FILE" ]; then
+        echo "true"
+    else
+        echo "false"
+    fi
 fi
 
 if [[ -z $1 ]]; then
