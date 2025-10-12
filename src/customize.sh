@@ -6,8 +6,8 @@ ui_print "  / / (_| | |_) | | |  __/ |_| |_ "
 ui_print " /___\__,_| .__/|_|  \\___|\__|\__|"
 ui_print "          | |                     "
 ui_print "          |_|                     "
-ui_print "(!) To download app, use Telegramm channel"
-ui_print "Module by: egorwhite, Cherret, Huananzhi X99"
+ui_print "(!) To download app, use Telegram channel"
+ui_print "Module by: egor-white, Cherret, Huananzhi X99"
 ui_print "App by: egor-white, Cherret"
 ui_print "####################"
 
@@ -65,4 +65,4 @@ chmod 777 /sdcard/zaprett; chmod 777 $MODPATH/service.sh
 ui_print "Cleaning temp files..."
 rm -rf $MODPATH/system/etc/zaprett
 
-ui_print "Installation done. Telegram chat: https://t.me/zaprett_module"
+ui_print "Installation done. Telegram channel: https://t.me/zaprett_module"
