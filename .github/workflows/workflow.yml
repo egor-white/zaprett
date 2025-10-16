@@ -68,8 +68,8 @@ jobs:
           cp -r zaprett/* zaprett-tv/
       - name: Download and copy actual lists
         run: |
-          wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/list-youtube.txt -O lists/list-youtube.txt
-          wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/list-discord.txt -O lists/list-discord.txt
+          wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/list-youtube.txt -O lists/include/list-youtube.txt
+          wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/list-discord.txt -O lists/include/list-discord.txt
 
           cp lists/list-youtube.txt zaprett/system/etc/zaprett/lists/
           cp lists/list-youtube.txt zaprett-hosts/system/etc/zaprett/lists/
@@ -87,7 +87,7 @@ jobs:
           name=zaprett
           version=${{ inputs.version }}
           versionCode=${{ inputs.version_code }}
-          author=egor-white, Huananzhi X99, Cherret
+          author=egor-white, Cherret
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update.json
           EOF
@@ -97,7 +97,7 @@ jobs:
           name=zaprett-hosts
           version=${{ inputs.version }}
           versionCode=${{ inputs.version_code }}
-          author=egor-white, Huananzhi X99, Cherret
+          author=egor-white, Cherret
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-hosts.json
           EOF
@@ -107,7 +107,7 @@ jobs:
           name=zaprett-tv
           version=${{ inputs.version }}
           versionCode=${{ inputs.version_code }}
-          author=egor-white, Huananzhi X99, Cherret
+          author=egor-white, Cherret
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-tv.json
           EOF
