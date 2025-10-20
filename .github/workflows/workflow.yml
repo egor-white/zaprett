@@ -147,7 +147,7 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
-          cat > update_hosts.json <<EOF
+          cat > update-hosts.json <<EOF
           {
             "version": "${{ inputs.version }}",
             "versionCode": ${{ inputs.version_code }},
@@ -155,7 +155,7 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
-          cat > update_tv.json <<EOF
+          cat > update-tv.json <<EOF
           {
             "version": "${{ inputs.version }}",
             "versionCode": ${{ inputs.version_code }},
