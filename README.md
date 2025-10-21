@@ -7,7 +7,7 @@
 Требования:
 * Magisk 24.1+
 * Прямые руки
-* Termux или другой эмулятор терминала **И/ИЛИ** [приложение zaprett](https://github.com/egor-white/zaprett-app) (не обновляется) **ИЛИ** [ремейк приложения zaprett от cherret](https://github.com/CherretGit/zaprett-app)
+* Termux или другой эмулятор терминала **И/ИЛИ**  [ремейк приложения zaprett от cherret](https://еithub.com/CherretGit/zaprett-app) ("оригинал" устарел и не обновляется, вместо этого мы вдвоём занимаемся версией на Kotlin!)
 
 На данный момент модуль умеет:
 + Включать, выключать и перезапускать nfqws
