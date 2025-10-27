@@ -1,5 +1,10 @@
 # zaprett
 
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/egor-white/zaprett/total)
+![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/egor-white/zaprett/latest/total)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/egor-white/zaprett/workflow.yml)
+
+
 ### [Официальный Telegram-канал модуля](https://t.me/zaprett_module)
 
 ## О модуле
