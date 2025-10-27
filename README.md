@@ -5,7 +5,7 @@
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/egor-white/zaprett/workflow.yml)
 
 
-### [Официальный Telegram-канал модуля](https://t.me/zaprett_module)
+### [📣 Официальный Telegram-канал модуля](https://t.me/zaprett_module)
 
 ## О модуле
 Представляет собой портированную версию [zapret](https://github.com/bol-van/zapret/) от [bol-van](https://github.com/bol-van/) для Android устройств.
