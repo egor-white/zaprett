@@ -11,6 +11,7 @@ fn main() {
     cc::Build::new()
         .file(NFQ.join("nfqws.c"))
         .include(&*NFQ)
+        .flag("-w")
         .compile("libnfqws.a");
 
     println!("cargo:rustc-link-lib=static=nfqws");
