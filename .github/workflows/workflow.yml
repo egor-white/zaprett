@@ -4,23 +4,23 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag for the release (x.x.x)'
+        description: "Tag for the release (x.x.x)"
         required: true
         type: string
       version:
-        description: 'Module version (x.x)'
+        description: "Module version (x.x)"
         required: true
         type: string
       version_code:
-        description: 'Module version code (xx)'
+        description: "Module version code (xx)"
         required: true
         type: string
       release_name:
-        description: 'Release Name'
+        description: "Release Name"
         required: true
         type: string
       release_changes:
-        description: 'Release Changes'
+        description: "Release Changes"
         required: true
         type: string
 
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Make build dirs
-        run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett-tv/system/bin zaprett/system/etc/zaprett/lists zapret-latest out lists zapret-hosts/system/etc/zaprett/lists zapret-tv/system/etc/zaprett/lists 
+        run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett-tv/system/bin zaprett/system/etc/zaprett/lists zapret-latest out lists zapret-hosts/system/etc/zaprett/lists zapret-tv/system/etc/zaprett/lists
 
       - name: Download latest zapret binaries
         run: |
@@ -61,7 +61,7 @@ jobs:
           cp zapret-latest/binaries/linux-mips/nfqws zaprett/system/bin/nfqws_mips
           cp zapret-latest/binaries/linux-mipsel/nfqws zaprett/system/bin/nfqws_mipsel
 
-          cp -a src/* zaprett/
+          cp -a src-module/* zaprett/
 
           #copy all files to another distributions
           cp -r zaprett/* zaprett-hosts/
@@ -79,7 +79,7 @@ jobs:
           cp lists/list-discord.txt zaprett-hosts/system/etc/zaprett/lists/
 
           cp hosts/hosts zaprett-hosts/system/etc
-      
+
       - name: Create module.prop
         run: |
           cat > zaprett/module.prop <<EOF
@@ -91,7 +91,7 @@ jobs:
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update.json
           EOF
-          
+
           cat > zaprett-hosts/module.prop <<EOF
           id=zaprett
           name=zaprett-hosts
@@ -101,7 +101,7 @@ jobs:
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-hosts.json
           EOF
-          
+
           cat > zaprett-tv/module.prop <<EOF
           id=zaprett
           name=zaprett-tv
@@ -111,7 +111,7 @@ jobs:
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-tv.json
           EOF
-          
+
       - name: Tree files
         run: |
           tree zaprett/ zaprett-hosts/ zaprett-tv/
@@ -124,7 +124,7 @@ jobs:
           mv zaprett.zip out/
           mv zaprett-hosts.zip out/
           mv zaprett-tv.zip out/
-      
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
@@ -136,7 +136,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update changelog
         run: echo "${{ inputs.release_changes}}" > changelog.md
-          
+
       - name: Update update.json
         run: |
           cat > update.json <<EOF
@@ -167,8 +167,8 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update update's.json and changelog"
-          file_pattern: 'update.json update_hosts.json update_tv.json changelog.md'
-   
+          file_pattern: "update.json update_hosts.json update_tv.json changelog.md"
+
       - name: Send bot post
         env:
           MESSAGE_TEXT: |
@@ -185,4 +185,3 @@ jobs:
             -d parse_mode=HTML \
             -d disable_web_page_preview=true \
             --data-urlencode "text=$MESSAGE_TEXT"
-            
