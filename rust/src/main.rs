@@ -84,7 +84,7 @@ async fn main() {
         Some(Commands::ModuleVer) => module_version(),
         Some(Commands::BinVer) => todo!(), //bin_version(),
         //None => println!("zaprett installed. Join us: t.me/zaprett_module"),
-        None => run_nfqws("-v").await.unwrap(),
+        None => run_nfqws("-v".to_string()).await.unwrap(),
     }
     tokio::signal::ctrl_c().await.unwrap();
 }
@@ -302,33 +302,35 @@ fn clear_iptables_rules() {
     .unwrap();
 }
 
-async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
+async fn run_nfqws(args_str: String) -> anyhow::Result<()> {
     static RUNNING: AtomicBool = AtomicBool::new(false);
 
     if RUNNING.swap(true, Ordering::SeqCst) {
         bail!("nfqws already started!");
     }
 
-    let mut args = vec!["nfqws"];
+    let mut args = vec!["nfqws".to_string()];
 
     if args_str.trim().is_empty() {
-        args.push("-v");
+        args.push("-v".to_string());
     } else {
-        for token in args_str.trim().split_whitespace() {
-            args.push(token);
-        }
+        args.extend(args_str.trim().split_whitespace().map(String::from));
     }
-    let c_args: Vec<CString> = args.iter().map(|&arg| CString::new(arg).unwrap()).collect();
 
-    let _ = task::spawn_blocking(move || unsafe {
-        nfqws_main(
-            c_args.len() as libc::c_int,
-            c_args
-                .iter()
-                .map(|arg| arg.as_ptr())
-                .collect::<Vec<*const c_char>>()
-                .as_ptr(),
-        );
+    // fire-and-forget
+    let _ = task::spawn_blocking(move || {
+        let c_args: Vec<CString> = args
+            .into_iter()
+            .map(|arg| CString::new(arg).unwrap())
+            .collect();
+
+        let mut ptrs: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
+
+        unsafe {
+            nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr());
+        }
+
+        RUNNING.store(false, Ordering::SeqCst);
     });
 
     Ok(())
