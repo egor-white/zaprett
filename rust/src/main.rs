@@ -1,16 +1,14 @@
-use clap::builder::StringValueParser;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use ini::Ini;
 use procfs::process::all_processes;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{Read, Write};
 use std::os::raw::c_char;
-use std::sync::atomic::AtomicBool;
+use std::thread;
 use std::{fs, path::Path};
 use sysctl::{CtlValue, Sysctl};
 
@@ -85,7 +83,7 @@ async fn main() {
         Some(Commands::ModuleVer) => module_version(),
         Some(Commands::BinVer) => todo!(), //bin_version(),
         //None => println!("zaprett installed. Join us: t.me/zaprett_module"),
-        None => run_nfqws("-v").await,
+        None => run_nfqws("-v"),
     }
     tokio::signal::ctrl_c().await.unwrap();
 }
@@ -302,13 +300,7 @@ fn clear_iptables_rules() {
     )
     .unwrap();
 }
-async fn run_nfqws(args_str: &str) {
-    static RUNNING: AtomicBool = AtomicBool::new(false);
-
-    if RUNNING.load(Ordering::SeqCst) {
-        panic!("Thread with nfqws already started!");
-    }
-
+fn run_nfqws(args_str: &str) {
     let mut args: Vec<&str> = vec!["nfqws"];
 
     if args_str.trim().is_empty() {
@@ -321,6 +313,7 @@ async fn run_nfqws(args_str: &str) {
     let c_args: Vec<CString> = args.iter().map(|&arg| CString::new(arg).unwrap()).collect();
     let argv: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
 
-    RUNNING.store(true, Ordering::SeqCst);
-    tokio::task::spawn_blocking(|| nfqws_main(argv.len() as libc::c_int, argv.as_ptr()));
+    thread::spawn(|| unsafe {
+        nfqws_main(argv.len() as libc::c_int, argv.as_ptr());
+    });
 }
