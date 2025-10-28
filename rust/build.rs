@@ -35,4 +35,5 @@ fn main() {
 
     println!("cargo:rustc-link-lib=static=nfqws");
     println!("cargo:rerun-if-changed={}", NFQ.display());
+    println!("cargo:rerun-if-changed={}", NFQ_CRYPTO.display());
 }
