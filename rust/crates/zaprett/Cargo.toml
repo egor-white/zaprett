@@ -1,0 +1,20 @@
+[package]
+name = "zaprett"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+iptables = { workspace = true }
+libc = { workspace = true }
+procfs = { workspace = true }
+regex = { workspace = true }
+rust-ini = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sysctl ={ workspace = true }
+tokio = { workspace = true }
+once_cell = { workspace = true }
+libnfqws = { path = "../libnfqws" }

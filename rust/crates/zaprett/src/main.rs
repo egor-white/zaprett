@@ -15,9 +15,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fs, path::Path};
 use sysctl::{CtlValue, Sysctl};
 use tokio::task;
-use crate::libnfqws::nfqws_main;
-
-mod libnfqws;
+use libnfqws::nfqws_main;
 
 #[derive(Parser)]
 #[command(version)]
@@ -46,7 +44,7 @@ enum Commands {
                     value_name = "boolean",
                     action = ArgAction::Set,
                     value_parser = BoolishValueParser::new()
-                )]
+        )]
         autostart: bool,
     },
 
@@ -131,7 +129,7 @@ fn start_service() {
             config.active_lists,
             "/data/adb/modules/zaprett/tmp/hostlist",
         )
-        .unwrap();
+            .unwrap();
         merge_files(config.active_ipsets, "/data/adb/modules/zaprett/tmp/ipset").unwrap();
 
         let hosts = String::from("--hostlist=/data/adb/modules/zaprett/tmp/hostlist");
@@ -149,12 +147,12 @@ fn start_service() {
             config.active_exclude_lists,
             "/data/adb/modules/zaprett/tmp/hostlist-exclude",
         )
-        .unwrap();
+            .unwrap();
         merge_files(
             config.active_exclude_ipsets,
             "/data/adb/modules/zaprett/tmp/ipset-exclude",
         )
-        .unwrap();
+            .unwrap();
 
         let hosts =
             String::from("--hostlist-exclude=/data/adb/modules/zaprett/tmp/hostlist-exclude");
@@ -266,20 +264,20 @@ fn setup_iptables_rules() {
         "-j NFQUEUE --queue-num 200 --queue-bypass",
         1,
     )
-    .unwrap();
+        .unwrap();
     ipt.insert(
         "mangle",
         "PREROUTING",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
         1,
     )
-    .unwrap();
+        .unwrap();
     ipt.append(
         "filter",
         "FORWARD",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
     )
-    .unwrap();
+        .unwrap();
 }
 fn clear_iptables_rules() {
     let ipt = iptables::new(false).unwrap();
@@ -289,19 +287,19 @@ fn clear_iptables_rules() {
         "POSTROUTING",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
     )
-    .unwrap();
+        .unwrap();
     ipt.delete(
         "mangle",
         "PREROUTING",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
     )
-    .unwrap();
+        .unwrap();
     ipt.delete(
         "filter",
         "FORWARD",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
     )
-    .unwrap();
+        .unwrap();
 }
 
 async fn run_nfqws(args_str: String) -> anyhow::Result<()> {
