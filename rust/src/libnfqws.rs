@@ -1,8 +1,2 @@
-// Raw FFI bindings to libnfqws.a
-
-use std::ffi::c_char;
-
-#[link(name = "nfqws", kind = "static")]
-unsafe extern "C" {
-    pub fn nfqws_main(argc: libc::c_int, argv: *const *const c_char) -> libc::c_int;
-}
+#[allow(non_camel_case_types, non_snake_case, dead_code, improper_ctypes)]
+include!(concat!(env!("OUT_DIR"), "/libnfqws.rs"));

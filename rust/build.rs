@@ -36,4 +36,25 @@ fn main() {
     println!("cargo:rustc-link-lib=static=nfqws");
     println!("cargo:rerun-if-changed={}", NFQ.display());
     println!("cargo:rerun-if-changed={}", NFQ_CRYPTO.display());
+
+    let mut builder = bindgen::Builder::default();
+
+    for header in glob::glob(&format!("{}/*.h", NFQ.display()))
+        .unwrap()
+        .filter_map(Result::ok)
+    {
+        builder = builder.header(header.to_string_lossy());
+    }
+
+    builder = builder.clang_arg("-Dmain=nfqws_main");
+
+    let bindings = builder
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        .generate()
+        .expect("Unable to generate bindings");
+
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    bindings
+        .write_to_file(out_path.join("libnfqws.rs"))
+        .expect("Couldn't write bindings");
 }

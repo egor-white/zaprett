@@ -1,6 +1,5 @@
-mod libnfqws;
+// mod libnfqws;
 
-use crate::libnfqws::nfqws_main;
 use anyhow::bail;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use ini::Ini;
@@ -16,6 +15,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fs, path::Path};
 use sysctl::{CtlValue, Sysctl};
 use tokio::task;
+use crate::libnfqws::nfqws_main;
+
+mod libnfqws;
 
 #[derive(Parser)]
 #[command(version)]
@@ -327,7 +329,7 @@ async fn run_nfqws(args_str: String) -> anyhow::Result<()> {
         let mut ptrs: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
 
         unsafe {
-            nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr());
+            nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
         }
 
         RUNNING.store(false, Ordering::SeqCst);
