@@ -19,5 +19,4 @@ once_cell = "1.21.3"
 
 [build-dependencies]
 cc = "1.2.43"
-bindgen = "0.72.1"
 once_cell = "1.21.3"

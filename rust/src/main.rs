@@ -1,5 +1,7 @@
 mod libnfqws;
 
+use crate::libnfqws::nfqws_main;
+use anyhow::bail;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use ini::Ini;
 use procfs::process::all_processes;
@@ -13,7 +15,7 @@ use std::os::raw::c_char;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fs, path::Path};
 use sysctl::{CtlValue, Sysctl};
-use crate::libnfqws::nfqws_main;
+use tokio::task;
 
 #[derive(Parser)]
 #[command(version)]
@@ -82,7 +84,7 @@ async fn main() {
         Some(Commands::ModuleVer) => module_version(),
         Some(Commands::BinVer) => todo!(), //bin_version(),
         //None => println!("zaprett installed. Join us: t.me/zaprett_module"),
-        None => run_nfqws("-v").await,
+        None => run_nfqws("-v").await.unwrap(),
     }
     tokio::signal::ctrl_c().await.unwrap();
 }
@@ -299,14 +301,15 @@ fn clear_iptables_rules() {
     )
     .unwrap();
 }
-async fn run_nfqws(args_str: &str) {
+
+async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
     static RUNNING: AtomicBool = AtomicBool::new(false);
 
-    if RUNNING.load(Ordering::SeqCst) {
-        panic!("Thread with nfqws already started!");
+    if RUNNING.swap(true, Ordering::SeqCst) {
+        bail!("nfqws already started!");
     }
 
-    let mut args: Vec<&str> = vec!["nfqws"];
+    let mut args = vec!["nfqws"];
 
     if args_str.trim().is_empty() {
         args.push("-v");
@@ -316,12 +319,17 @@ async fn run_nfqws(args_str: &str) {
         }
     }
     let c_args: Vec<CString> = args.iter().map(|&arg| CString::new(arg).unwrap()).collect();
-    let argv: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
 
-    RUNNING.store(true, Ordering::SeqCst);
-    // tokio::task::spawn_blocking(move || );
+    let _ = task::spawn_blocking(move || unsafe {
+        nfqws_main(
+            c_args.len() as libc::c_int,
+            c_args
+                .iter()
+                .map(|arg| arg.as_ptr())
+                .collect::<Vec<*const c_char>>()
+                .as_ptr(),
+        );
+    });
 
-    unsafe {
-        nfqws_main(argv.len() as libc::c_int, argv.as_ptr());
-    }
+    Ok(())
 }

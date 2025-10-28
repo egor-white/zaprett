@@ -1,6 +1,6 @@
+use once_cell::sync::Lazy;
 use std::env;
 use std::path::{Path, PathBuf};
-use once_cell::sync::Lazy;
 
 static NFQ: Lazy<PathBuf> = Lazy::new(|| {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
