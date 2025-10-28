@@ -11,8 +11,8 @@ macro_rules! rel_manifest_path {
     };
 }
 
-rel_manifest_path!(NFQ, "libs/zapret/nfq");
-rel_manifest_path!(NFQ_CRYPTO, "libs/zapret/nfq/crypto");
+rel_manifest_path!(NFQ, "zapret/nfq");
+rel_manifest_path!(NFQ_CRYPTO, "zapret/nfq/crypto");
 
 fn main() {
     cc::Build::new()
