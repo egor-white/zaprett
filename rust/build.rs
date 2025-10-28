@@ -12,6 +12,7 @@ fn main() {
         .file(NFQ.join("nfqws.c"))
         .include(&*NFQ)
         .flag("-w")
+        .flag("-Dmain=nfqws_main")
         .compile("libnfqws.a");
 
     println!("cargo:rustc-link-lib=static=nfqws");

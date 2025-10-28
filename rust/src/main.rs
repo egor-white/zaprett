@@ -84,7 +84,7 @@ async fn main() {
         Some(Commands::ModuleVer) => module_version(),
         Some(Commands::BinVer) => todo!(), //bin_version(),
         //None => println!("zaprett installed. Join us: t.me/zaprett_module"),
-        None => run_nfqws("-v".to_string()).await.unwrap(),
+        None => run_nfqws("--version".to_string()).await.unwrap(),
     }
     tokio::signal::ctrl_c().await.unwrap();
 }
