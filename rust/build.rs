@@ -1,12 +1,18 @@
-use cmake::Config;
+use std::env;
+use std::path::{Path, PathBuf};
+use once_cell::sync::Lazy;
+
+static NFQ: Lazy<PathBuf> = Lazy::new(|| {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    Path::new(&manifest_dir).join("libs/zapret/nfq")
+});
 
 fn main() {
-    let dst = Config::new(".").build_target("nfqws").build();
-    let lib_path = dst.join("build");
-    println!("cargo:rustc-link-search=native={}", lib_path.display());
+    cc::Build::new()
+        .file(NFQ.join("nfqws.c"))
+        .include(&*NFQ)
+        .compile("libnfqws.a");
+
     println!("cargo:rustc-link-lib=static=nfqws");
-    println!("cargo:rustc-link-lib=z");
-    println!("cargo:rustc-link-lib=netfilter_queue");
-    println!("cargo:rustc-link-lib=nfnetlink");
-    println!("cargo:rustc-link-lib=mnl");
+    println!("cargo:rerun-if-changed={}", NFQ.display());
 }

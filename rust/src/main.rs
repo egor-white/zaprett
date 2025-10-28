@@ -1,18 +1,19 @@
-use clap::builder::StringValueParser;
+mod libnfqws;
+
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use ini::Ini;
 use procfs::process::all_processes;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::cmp::Ordering;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::BufReader;
 use std::io::{Read, Write};
 use std::os::raw::c_char;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fs, path::Path};
 use sysctl::{CtlValue, Sysctl};
+use crate::libnfqws::nfqws_main;
 
 #[derive(Parser)]
 #[command(version)]
@@ -66,10 +67,6 @@ struct Config {
     app_list: String,
     whitelist: Vec<String>,
     blacklist: Vec<String>,
-}
-#[link(name = "nfqws", kind = "static")]
-unsafe extern "C" {
-    fn nfqws_main(argc: libc::c_int, argv: *const *const c_char) -> libc::c_int;
 }
 
 #[tokio::main]
@@ -322,5 +319,9 @@ async fn run_nfqws(args_str: &str) {
     let argv: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
 
     RUNNING.store(true, Ordering::SeqCst);
-    tokio::task::spawn_blocking(|| nfqws_main(argv.len() as libc::c_int, argv.as_ptr()));
+    // tokio::task::spawn_blocking(move || );
+
+    unsafe {
+        nfqws_main(argv.len() as libc::c_int, argv.as_ptr());
+    }
 }
