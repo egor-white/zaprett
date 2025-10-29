@@ -13,8 +13,12 @@ use std::io::{Read, Write};
 use std::os::raw::c_char;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fs, path::Path};
+use std::time::Duration;
+use daemonize::Daemonize;
+use log::{error, info};
 use sysctl::{CtlValue, Sysctl};
 use tokio::task;
+use tokio::time::sleep;
 use libnfqws::nfqws_main;
 
 #[derive(Parser)]
@@ -73,6 +77,8 @@ struct Config {
 
 #[tokio::main]
 async fn main() {
+    pretty_env_logger::init();
+
     let cli = Cli::parse();
     match &cli.cmd {
         Some(Commands::Start) => start_service(),
@@ -84,9 +90,24 @@ async fn main() {
         Some(Commands::ModuleVer) => module_version(),
         Some(Commands::BinVer) => todo!(), //bin_version(),
         //None => println!("zaprett installed. Join us: t.me/zaprett_module"),
-        None => run_nfqws("--version".to_string()).await.unwrap(),
+        None => daemonize_nfqws("--uid=0:0 --qnum=200".to_string()).await,
     }
-    tokio::signal::ctrl_c().await.unwrap();
+}
+
+async fn daemonize_nfqws(args: String) {
+    info!("Starting nfqws as a daemon");
+    let daemonize = Daemonize::new()
+        .working_directory("/tmp")
+        .group("daemon")
+        .privileged_action(|| "Executed before drop privileges");
+
+    match daemonize.start() {
+        Ok(_) => {
+            info!("Success, daemonized");
+            run_nfqws(args).await.unwrap()
+        },
+        Err(e) => error!("Error while starting nfqws daemon: {e}"),
+    }
 }
 
 fn start_service() {
@@ -331,7 +352,7 @@ async fn run_nfqws(args_str: String) -> anyhow::Result<()> {
         }
 
         RUNNING.store(false, Ordering::SeqCst);
-    });
+    }).await?;
 
     Ok(())
 }
