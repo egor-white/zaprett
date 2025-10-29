@@ -2,7 +2,10 @@
 
 use anyhow::bail;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
+use daemonize::Daemonize;
 use ini::Ini;
+use libnfqws::nfqws_main;
+use log::{error, info};
 use procfs::process::all_processes;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -11,15 +14,11 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::{Read, Write};
 use std::os::raw::c_char;
+use std::sync::LazyLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fs, path::Path};
-use std::time::Duration;
-use daemonize::Daemonize;
-use log::{error, info};
 use sysctl::{CtlValue, Sysctl};
 use tokio::task;
-use tokio::time::sleep;
-use libnfqws::nfqws_main;
 
 #[derive(Parser)]
 #[command(version)]
@@ -75,6 +74,10 @@ struct Config {
     blacklist: Vec<String>,
 }
 
+pub static MODULE_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("/data/adb/modules/zaprett"));
+pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
+    LazyLock::new(|| Path::new("/storage/emulated/0/zaprett"));
+
 #[tokio::main]
 async fn main() {
     pretty_env_logger::init();
@@ -89,12 +92,11 @@ async fn main() {
         Some(Commands::GetAutostart) => get_autostart(),
         Some(Commands::ModuleVer) => module_version(),
         Some(Commands::BinVer) => todo!(), //bin_version(),
-        //None => println!("zaprett installed. Join us: t.me/zaprett_module"),
-        None => daemonize_nfqws("--uid=0:0 --qnum=200".to_string()).await,
+        None => println!("zaprett installed. Join us: t.me/zaprett_module"),
     }
 }
 
-async fn daemonize_nfqws(args: String) {
+async fn daemonize_nfqws(args: &String) {
     info!("Starting nfqws as a daemon");
     let daemonize = Daemonize::new()
         .working_directory("/tmp")
@@ -105,7 +107,7 @@ async fn daemonize_nfqws(args: String) {
         Ok(_) => {
             info!("Success, daemonized");
             run_nfqws(args).await.unwrap()
-        },
+        }
         Err(e) => error!("Error while starting nfqws daemon: {e}"),
     }
 }
@@ -113,7 +115,7 @@ async fn daemonize_nfqws(args: String) {
 fn start_service() {
     println!("Starting zaprett service...");
 
-    let tmp_dir = Path::new("/data/adb/modules/zaprett/tmp");
+    let tmp_dir = MODULE_PATH.join("tmp");
     if tmp_dir.exists() {
         fs::remove_dir_all(&tmp_dir).unwrap()
     }
@@ -142,49 +144,63 @@ fn start_service() {
     let regex_ipsets = Regex::new(r"\$ipset").unwrap();
     let regex_zaprettdir = Regex::new(r"\$\{?zaprettdir\}?").unwrap();
 
-    let zaprett_dir = String::from("/sdcard/zaprett");
     let mut strat_modified = String::new();
 
     if list_type.eq("whitelist") {
         merge_files(
             config.active_lists,
-            "/data/adb/modules/zaprett/tmp/hostlist",
+            MODULE_PATH.join("tmp/hostlist").as_path(),
         )
-            .unwrap();
-        merge_files(config.active_ipsets, "/data/adb/modules/zaprett/tmp/ipset").unwrap();
+        .unwrap();
+        merge_files(
+            config.active_ipsets,
+            MODULE_PATH.join("tmp/ipset").as_path(),
+        )
+        .unwrap();
 
-        let hosts = String::from("--hostlist=/data/adb/modules/zaprett/tmp/hostlist");
-        let ipsets = String::from("--ipset=/data/adb/modules/zaprett/tmp/ipset");
+        let hosts = String::from(format!(
+            "--hostlist={}/tmp/hostlist",
+            MODULE_PATH.to_str().unwrap()
+        ));
+        let ipsets = String::from(format!(
+            "--ipset={}tmp/ipset",
+            MODULE_PATH.to_str().unwrap()
+        ));
 
         strat_modified = regex_hostlist.replace_all(&strat, &hosts).into_owned();
         strat_modified = regex_ipsets
             .replace_all(&strat_modified, &ipsets)
             .into_owned();
         strat_modified = regex_zaprettdir
-            .replace_all(&strat_modified, &zaprett_dir)
+            .replace_all(&strat_modified, &*ZAPRETT_DIR_PATH.to_str().unwrap())
             .into_owned();
     } else if list_type.eq("blacklist") {
         merge_files(
             config.active_exclude_lists,
-            "/data/adb/modules/zaprett/tmp/hostlist-exclude",
+            MODULE_PATH.join("tmp/hostlist-exclude").as_path(),
         )
-            .unwrap();
+        .unwrap();
         merge_files(
             config.active_exclude_ipsets,
-            "/data/adb/modules/zaprett/tmp/ipset-exclude",
+            MODULE_PATH.join("tmp/ipset-exclude").as_path(),
         )
-            .unwrap();
+        .unwrap();
 
-        let hosts =
-            String::from("--hostlist-exclude=/data/adb/modules/zaprett/tmp/hostlist-exclude");
-        let ipsets = String::from("--ipset-exclude=/data/adb/modules/zaprett/tmp/ipset-exclude");
+        let hosts = String::from(format!(
+            "--hostlist-exclude={}/tmp/hostlist-exclude",
+            MODULE_PATH.to_str().unwrap()
+        ));
+        let ipsets = String::from(format!(
+            "--ipset-exclude={}/tmp/ipset-exclude",
+            MODULE_PATH.to_str().unwrap()
+        ));
 
         strat_modified = regex_hostlist.replace_all(&strat, &hosts).into_owned();
         strat_modified = regex_ipsets
             .replace_all(&strat_modified, &ipsets)
             .into_owned();
         strat_modified = regex_zaprettdir
-            .replace_all(&strat_modified, &zaprett_dir)
+            .replace_all(&strat_modified, &*ZAPRETT_DIR_PATH.to_str().unwrap())
             .into_owned();
     } else {
         panic!("no list-type called {}", &list_type)
@@ -194,32 +210,36 @@ fn start_service() {
     ctl.set_value(CtlValue::Int(1)).unwrap();
 
     setup_iptables_rules();
-    //run_nfqws(&strat_modified);
-    todo!();
+    daemonize_nfqws(&strat_modified);
     println!("zaprett service started!");
 }
+
 fn stop_service() {
     clear_iptables_rules();
     todo!()
 }
+
 fn restart_service() {
     stop_service();
     start_service();
     println!("zaprett service restarted!")
 }
+
 fn set_autostart(autostart: &bool) {
     if *autostart {
-        if let Err(e) = std::fs::File::create("/data/adb/modules/zaprett/autostart") {
+        if let Err(e) = std::fs::File::create(MODULE_PATH.join("autostart")) {
             eprintln!("autostart: cannot create flag file: {e}");
         }
     } else {
-        fs::remove_file("/data/adb/modules/zaprett/autostart").unwrap()
+        fs::remove_file(MODULE_PATH.join("autostart")).unwrap()
     }
 }
+
 fn get_autostart() {
-    let file = Path::new("/data/adb/modules/zaprett/autostart");
+    let file = MODULE_PATH.join("autostart");
     println!("{}", file.exists());
 }
+
 fn service_status() {
     let running = match all_processes() {
         Ok(iter) => iter
@@ -233,7 +253,7 @@ fn service_status() {
 }
 
 fn module_version() {
-    if let Ok(prop) = Ini::load_from_file("/data/adb/modules/zaprett/module.prop") {
+    if let Ok(prop) = Ini::load_from_file(MODULE_PATH.join("module.prop")) {
         if let Some(props) = prop.section::<String>(None) {
             if let Some(v) = props.get("version") {
                 println!("{}", v);
@@ -241,6 +261,7 @@ fn module_version() {
         }
     }
 }
+
 fn bin_version() {
     todo!()
     /*if let Ok(output) = Command::new("nfqws").arg("--version").output() {
@@ -259,7 +280,7 @@ fn bin_version() {
 }
 fn merge_files(
     input_paths: Vec<String>,
-    output_path: &str,
+    output_path: &Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mut combined_content = String::new();
 
@@ -276,6 +297,7 @@ fn merge_files(
 
     Ok(())
 }
+
 fn setup_iptables_rules() {
     let ipt = iptables::new(false).unwrap();
 
@@ -285,21 +307,22 @@ fn setup_iptables_rules() {
         "-j NFQUEUE --queue-num 200 --queue-bypass",
         1,
     )
-        .unwrap();
+    .unwrap();
     ipt.insert(
         "mangle",
         "PREROUTING",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
         1,
     )
-        .unwrap();
+    .unwrap();
     ipt.append(
         "filter",
         "FORWARD",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
     )
-        .unwrap();
+    .unwrap();
 }
+
 fn clear_iptables_rules() {
     let ipt = iptables::new(false).unwrap();
 
@@ -308,22 +331,22 @@ fn clear_iptables_rules() {
         "POSTROUTING",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
     )
-        .unwrap();
+    .unwrap();
     ipt.delete(
         "mangle",
         "PREROUTING",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
     )
-        .unwrap();
+    .unwrap();
     ipt.delete(
         "filter",
         "FORWARD",
         "-j NFQUEUE --queue-num 200 --queue-bypass",
     )
-        .unwrap();
+    .unwrap();
 }
 
-async fn run_nfqws(args_str: String) -> anyhow::Result<()> {
+async fn run_nfqws(args_str: &String) -> anyhow::Result<()> {
     static RUNNING: AtomicBool = AtomicBool::new(false);
 
     if RUNNING.swap(true, Ordering::SeqCst) {
@@ -352,7 +375,8 @@ async fn run_nfqws(args_str: String) -> anyhow::Result<()> {
         }
 
         RUNNING.store(false, Ordering::SeqCst);
-    }).await?;
+    })
+    .await?;
 
     Ok(())
 }
