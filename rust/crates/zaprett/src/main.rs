@@ -84,7 +84,7 @@ async fn main() {
 
     let cli = Cli::parse();
     match &cli.cmd {
-        Some(Commands::Start) => start_service(),
+        Some(Commands::Start) => start_service().await,
         Some(Commands::Stop) => stop_service(),
         Some(Commands::Restart) => restart_service(),
         Some(Commands::Status) => service_status(),
@@ -112,7 +112,7 @@ async fn daemonize_nfqws(args: &String) {
     }
 }
 
-fn start_service() {
+async fn start_service() {
     println!("Starting zaprett service...");
 
     let tmp_dir = MODULE_PATH.join("tmp");
@@ -210,7 +210,7 @@ fn start_service() {
     ctl.set_value(CtlValue::Int(1)).unwrap();
 
     setup_iptables_rules();
-    daemonize_nfqws(&strat_modified);
+    daemonize_nfqws(&strat_modified).await;
     println!("zaprett service started!");
 }
 
