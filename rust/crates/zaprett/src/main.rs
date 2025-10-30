@@ -1,5 +1,3 @@
-extern crate nix;
-
 use anyhow::bail;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use daemonize::Daemonize;
@@ -57,6 +55,9 @@ enum Commands {
 
     #[clap(about = "Get module version")]
     ModuleVer,
+
+    #[clap(about = "Get nfqws binary version")]
+    BinVer,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -112,6 +113,10 @@ async fn main() -> anyhow::Result<()> {
         }
         Some(Commands::ModuleVer) => {
             module_version();
+            Ok(())
+        }
+        Some(Commands::BinVer) => {
+            bin_version();
             Ok(())
         }
         None => {
@@ -317,22 +322,9 @@ fn module_version() {
     }
 }
 
-/*fn bin_version() {
-    todo!()
-    /*if let Ok(output) = Command::new("nfqws").arg("--version").output() {
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            if let Ok(re) = Regex::new(r"version v[0-9.]+") {
-                if let Some(m) = re.find(&stdout) {
-                    if let Some(v) = m.as_str().split_whitespace().nth(1) {
-                        println!("{}", v);
-                        return;
-                    }
-                }
-            }
-        }
-    }*/
-}*/
+fn bin_version() {
+    println!("{}", env!("ZAPRET_VERSION"));
+}
 fn merge_files(
     input_paths: Vec<String>,
     output_path: &Path,
