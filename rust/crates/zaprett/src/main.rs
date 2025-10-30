@@ -1,11 +1,11 @@
-// mod libnfqws;
-
 use anyhow::bail;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use daemonize::Daemonize;
 use ini::Ini;
 use libnfqws::nfqws_main;
 use log::{error, info};
+use nix::sys::signal::{Signal, kill};
+use nix::unistd::Pid;
 use procfs::process::all_processes;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -15,9 +15,8 @@ use std::io::BufReader;
 use std::io::{Read, Write};
 use std::os::raw::c_char;
 use std::sync::LazyLock;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::{fs, path::Path};
-use sysctl::{CtlValue, Sysctl};
+use sysctl::Sysctl;
 use tokio::task;
 
 #[derive(Parser)]
@@ -86,8 +85,17 @@ async fn main() {
     match &cli.cmd {
         Some(Commands::Start) => start_service().await,
         Some(Commands::Stop) => stop_service(),
-        Some(Commands::Restart) => restart_service(),
-        Some(Commands::Status) => service_status(),
+        Some(Commands::Restart) => restart_service().await,
+        Some(Commands::Status) => {
+            println!(
+                "zaprett is {}",
+                if service_status() {
+                    "working"
+                } else {
+                    "stopped"
+                }
+            )
+        }
         Some(Commands::SetAutostart { autostart }) => set_autostart(autostart),
         Some(Commands::GetAutostart) => get_autostart(),
         Some(Commands::ModuleVer) => module_version(),
@@ -117,11 +125,13 @@ async fn start_service() {
 
     let tmp_dir = MODULE_PATH.join("tmp");
     if tmp_dir.exists() {
-        fs::remove_dir_all(&tmp_dir).unwrap()
+        fs::remove_dir_all(&tmp_dir).unwrap();
+        fs::create_dir_all(&tmp_dir).unwrap();
     }
 
-    let reader =
-        BufReader::new(File::open("/sdcard/zaprett/config.json").expect("cannot open config.json"));
+    let reader = BufReader::new(
+        File::open(ZAPRETT_DIR_PATH.join("config.json")).expect("cannot open config.json"),
+    );
     let config: Config = serde_json::from_reader(reader).expect("invalid json");
 
     let list_type: &String = &config.list_type;
@@ -207,7 +217,7 @@ async fn start_service() {
     }
 
     let ctl = sysctl::Ctl::new("net.netfilter.nf_conntrack_tcp_be_liberal").unwrap();
-    ctl.set_value(CtlValue::Int(1)).unwrap();
+    ctl.set_value(sysctl::CtlValue::String("1".into())).unwrap();
 
     setup_iptables_rules();
     daemonize_nfqws(&strat_modified).await;
@@ -216,12 +226,25 @@ async fn start_service() {
 
 fn stop_service() {
     clear_iptables_rules();
-    todo!()
+    for proc in all_processes().unwrap() {
+        if let Ok(p) = proc {
+            if let Ok(stat) = p.stat() {
+                if stat.comm == "zaprett" {
+                    let pid = Pid::from_raw(p.pid as i32);
+                    if let Err(_) = kill(pid, Signal::SIGTERM) {
+                        println!("failed to stop zaprett service")
+                    } else {
+                        println!("zaprett service stopped!")
+                    }
+                }
+            }
+        }
+    }
 }
 
-fn restart_service() {
+async fn restart_service() {
     stop_service();
-    start_service();
+    start_service().await;
     println!("zaprett service restarted!")
 }
 
@@ -240,16 +263,14 @@ fn get_autostart() {
     println!("{}", file.exists());
 }
 
-fn service_status() {
-    let running = match all_processes() {
+fn service_status() -> bool {
+    match all_processes() {
         Ok(iter) => iter
             .filter_map(|rp| rp.ok())
             .filter_map(|p| p.stat().ok())
-            .any(|st| st.comm == "nfqws"),
+            .any(|st| st.comm == "zaprett"),
         Err(_) => false,
-    };
-
-    println!("zaprett is {}", if running { "working" } else { "stopped" });
+    }
 }
 
 fn module_version() {
@@ -347,9 +368,7 @@ fn clear_iptables_rules() {
 }
 
 async fn run_nfqws(args_str: &String) -> anyhow::Result<()> {
-    static RUNNING: AtomicBool = AtomicBool::new(false);
-
-    if RUNNING.swap(true, Ordering::SeqCst) {
+    if service_status() {
         bail!("nfqws already started!");
     }
 
@@ -373,8 +392,6 @@ async fn run_nfqws(args_str: &String) -> anyhow::Result<()> {
         unsafe {
             nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
         }
-
-        RUNNING.store(false, Ordering::SeqCst);
     })
     .await?;
 
