@@ -1,3 +1,5 @@
+extern crate nix;
+
 use anyhow::bail;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use daemonize::Daemonize;
@@ -5,7 +7,7 @@ use ini::Ini;
 use libnfqws::nfqws_main;
 use log::{error, info};
 use nix::sys::signal::{Signal, kill};
-use nix::unistd::Pid;
+use nix::unistd::{Pid, Uid};
 use procfs::process::all_processes;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -55,9 +57,6 @@ enum Commands {
 
     #[clap(about = "Get module version")]
     ModuleVer,
-
-    #[clap(about = "Get nfqws binary version")]
-    BinVer,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -78,14 +77,20 @@ pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
     LazyLock::new(|| Path::new("/storage/emulated/0/zaprett"));
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
 
     let cli = Cli::parse();
     match &cli.cmd {
         Some(Commands::Start) => start_service().await,
-        Some(Commands::Stop) => stop_service(),
-        Some(Commands::Restart) => restart_service().await,
+        Some(Commands::Stop) => {
+            let _ = stop_service().await;
+            Ok(())
+        }
+        Some(Commands::Restart) => {
+            restart_service().await;
+            Ok(())
+        }
         Some(Commands::Status) => {
             println!(
                 "zaprett is {}",
@@ -94,19 +99,32 @@ async fn main() {
                 } else {
                     "stopped"
                 }
-            )
+            );
+            Ok(())
         }
-        Some(Commands::SetAutostart { autostart }) => set_autostart(autostart),
-        Some(Commands::GetAutostart) => get_autostart(),
-        Some(Commands::ModuleVer) => module_version(),
-        Some(Commands::BinVer) => todo!(), //bin_version(),
-        None => println!("zaprett installed. Join us: t.me/zaprett_module"),
+        Some(Commands::SetAutostart { autostart }) => {
+            set_autostart(autostart);
+            Ok(())
+        }
+        Some(Commands::GetAutostart) => {
+            get_autostart();
+            Ok(())
+        }
+        Some(Commands::ModuleVer) => {
+            module_version();
+            Ok(())
+        }
+        None => {
+            println!("zaprett installed. Join us: t.me/zaprett_module");
+            Ok(())
+        }
     }
 }
 
 async fn daemonize_nfqws(args: &String) {
     info!("Starting nfqws as a daemon");
     let daemonize = Daemonize::new()
+        .pid_file(MODULE_PATH.join("tmp/pid.lock").as_path())
         .working_directory("/tmp")
         .group("daemon")
         .privileged_action(|| "Executed before drop privileges");
@@ -120,10 +138,14 @@ async fn daemonize_nfqws(args: &String) {
     }
 }
 
-async fn start_service() {
+async fn start_service() -> anyhow::Result<()> {
+    if !Uid::effective().is_root() {
+        bail!("Running not from root, exiting");
+    };
+
     println!("Starting zaprett service...");
 
-    let tmp_dir = MODULE_PATH.join("tmp");
+    let tmp_dir = MODULE_PATH.join("/tmp");
     if tmp_dir.exists() {
         fs::remove_dir_all(&tmp_dir).unwrap();
         fs::create_dir_all(&tmp_dir).unwrap();
@@ -154,7 +176,7 @@ async fn start_service() {
     let regex_ipsets = Regex::new(r"\$ipset").unwrap();
     let regex_zaprettdir = Regex::new(r"\$\{?zaprettdir\}?").unwrap();
 
-    let mut strat_modified = String::new();
+    let mut strat_modified;
 
     if list_type.eq("whitelist") {
         merge_files(
@@ -222,11 +244,22 @@ async fn start_service() {
     setup_iptables_rules();
     daemonize_nfqws(&strat_modified).await;
     println!("zaprett service started!");
+    Ok(())
 }
 
-fn stop_service() {
+async fn stop_service() -> anyhow::Result<()> {
+    if !Uid::effective().is_root() {
+        bail!("Running not from root, exiting");
+    };
+
     clear_iptables_rules();
-    for proc in all_processes().unwrap() {
+
+    let pid_str = fs::read_to_string(MODULE_PATH.join("tmp/pid.lock").as_path())?;
+    let pid = pid_str.trim().parse::<i32>()?;
+
+    kill(Pid::from_raw(pid), Signal::SIGKILL).unwrap();
+
+    /*for proc in all_processes().unwrap() {
         if let Ok(p) = proc {
             if let Ok(stat) = p.stat() {
                 if stat.comm == "zaprett" {
@@ -239,12 +272,13 @@ fn stop_service() {
                 }
             }
         }
-    }
+    }*/
+    Ok(())
 }
 
 async fn restart_service() {
-    stop_service();
-    start_service().await;
+    stop_service().await.unwrap();
+    start_service().await.unwrap();
     println!("zaprett service restarted!")
 }
 
@@ -283,7 +317,7 @@ fn module_version() {
     }
 }
 
-fn bin_version() {
+/*fn bin_version() {
     todo!()
     /*if let Ok(output) = Command::new("nfqws").arg("--version").output() {
         if output.status.success() {
@@ -298,7 +332,7 @@ fn bin_version() {
             }
         }
     }*/
-}
+}*/
 fn merge_files(
     input_paths: Vec<String>,
     output_path: &Path,
