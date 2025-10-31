@@ -6,7 +6,6 @@ use libnfqws::nfqws_main;
 use log::{error, info};
 use nix::sys::signal::{Signal, kill};
 use nix::unistd::{Pid, Uid};
-use procfs::process::all_processes;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::ffi::CString;
@@ -311,13 +310,14 @@ fn service_status() -> bool {
         Ok(p) => p,
         Err(_) => return false,
     };
-    match all_processes() {
+    return true
+    /*match all_processes() {
         Ok(iter) => iter
             .filter_map(|rp| rp.ok())
             .filter_map(|p| p.stat().ok())
             .any(|st| st.pid == pid),
         Err(_) => false,
-    }
+    }*/
 }
 
 fn module_version() {

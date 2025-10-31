@@ -7,3 +7,6 @@
 [submodule "rust/crates/libnfqws/zapret"]
 	path = rust/crates/libnfqws/zapret
 	url = https://github.com/bol-van/zapret.git
+[submodule "rust/crates/iptables"]
+	path = rust/crates/iptables
+	url = https://github.com/yaa110/rust-iptables
