@@ -15,7 +15,7 @@ use std::sync::LazyLock;
 use std::{error};
 use std::{path::Path};
 use sysctl::Sysctl;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{copy, AsyncReadExt, AsyncWriteExt};
 use tokio::fs::File;
 use tokio::task;
 
@@ -279,13 +279,6 @@ async fn service_status() -> bool {
         .ok()
         .and_then(|pid_str| pid_str.trim().parse::<i32>().ok())
         .is_some()
-    /*match all_processes() {
-        Ok(iter) => iter
-            .filter_map(|rp| rp.ok())
-            .filter_map(|p| p.stat().ok())
-            .any(|st| st.pid == pid),
-        Err(_) => false,
-    }*/
 }
 
 fn module_version() {
@@ -306,15 +299,15 @@ pub async fn merge_files(
     output_path: impl AsRef<Path>,
 ) -> Result<(), Box<dyn error::Error>> {
     let output_path = output_path.as_ref();
-    let mut output_file = tokio::fs::File::create(output_path).await?;
+    let mut output_file = File::create(output_path).await?;
 
     for input in input_paths {
         let input_path = input.as_ref();
-        let mut input_file = tokio::fs::File::open(input_path)
+        let mut input_file = File::open(input_path)
             .await
             .map_err(|e| format!("Failed to open {}: {}", input_path.display(), e))?;
 
-        tokio::io::copy(&mut input_file, &mut output_file)
+        copy(&mut input_file, &mut output_file)
             .await
             .map_err(|e| {
                 format!(
