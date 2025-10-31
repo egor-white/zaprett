@@ -1,4 +1,3 @@
-use std::error;
 use anyhow::bail;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use daemonize::Daemonize;
@@ -10,13 +9,14 @@ use nix::unistd::{Pid, Uid};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::ffi::CString;
-use std::fs::File;
-use std::io::BufReader;
-use std::io::{Read, Write};
+use tokio::fs;
 use std::os::raw::c_char;
 use std::sync::LazyLock;
-use std::{fs, path::Path};
+use std::{error};
+use std::{path::Path};
 use sysctl::Sysctl;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::fs::File;
 use tokio::task;
 
 #[derive(Parser)]
@@ -43,9 +43,9 @@ enum Commands {
     #[clap(about = "Enable/disable autorestart")]
     SetAutostart {
         #[arg(
-                    value_name = "boolean",
-                    action = ArgAction::Set,
-                    value_parser = BoolishValueParser::new()
+            value_name = "boolean",
+            action = ArgAction::Set,
+            value_parser = BoolishValueParser::new()
         )]
         autostart: bool,
     },
@@ -61,12 +61,60 @@ enum Commands {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum ListType {
+    Whitelist,
+    Blacklist,
+}
+
+impl ListType {
+    /// # Returns
+    ///
+    /// (hostlist arg, ipset arg)
+    async fn merge(&self, config: &Config) -> (String, String) {
+        let module_path_str = MODULE_PATH.to_str().unwrap();
+
+        let (host_files, ipset_files, host_suffix, ipset_suffix) = match self {
+            ListType::Whitelist => (
+                &config.active_lists,
+                &config.active_ipsets,
+                "hostlist",
+                "ipset",
+            ),
+            ListType::Blacklist => (
+                &config.active_exclude_lists,
+                &config.active_exclude_ipsets,
+                "hostlist-exclude",
+                "ipset-exclude",
+            ),
+        };
+
+        let host_path = MODULE_PATH.join(format!("tmp/{host_suffix}"));
+        let ipset_path = MODULE_PATH.join(format!("tmp/{ipset_suffix}"));
+
+        merge_files(host_files, host_path).await.unwrap();
+        merge_files(ipset_files, ipset_path).await.unwrap();
+
+        let exclude = if matches!(self, ListType::Blacklist) {
+            "-exclude"
+        } else {
+            ""
+        };
+
+        (
+            format!("--hostlist{exclude}={module_path_str}/tmp/{host_suffix}"),
+            format!("--ipset{exclude}={module_path_str}/tmp/{ipset_suffix}"),
+        )
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 struct Config {
     active_lists: Vec<String>,
     active_ipsets: Vec<String>,
     active_exclude_lists: Vec<String>,
     active_exclude_ipsets: Vec<String>,
-    list_type: String,
+    list_type: ListType,
     strategy: String,
     app_list: String,
     whitelist: Vec<String>,
@@ -83,47 +131,33 @@ async fn main() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
     match &cli.cmd {
-        Some(Commands::Start) => start_service().await,
+        Some(Commands::Start) => return start_service().await,
         Some(Commands::Stop) => {
             let _ = stop_service().await;
-            Ok(())
-        }
-        Some(Commands::Restart) => {
-            restart_service().await;
-            Ok(())
-        }
+        },
+        Some(Commands::Restart) => return restart_service().await,
         Some(Commands::Status) => {
             println!(
                 "zaprett is {}",
-                if service_status() {
+                if service_status().await {
                     "working"
                 } else {
                     "stopped"
                 }
             );
-            Ok(())
-        }
+        },
         Some(Commands::SetAutostart { autostart }) => {
-            set_autostart(autostart);
-            Ok(())
-        }
-        Some(Commands::GetAutostart) => {
-            get_autostart();
-            Ok(())
-        }
-        Some(Commands::ModuleVer) => {
-            module_version();
-            Ok(())
-        }
-        Some(Commands::BinVer) => {
-            bin_version();
-            Ok(())
-        }
-        None => {
-            info!("zaprett installed. Join us: t.me/zaprett_module");
-            Ok(())
-        }
+            if let Err(err) = set_autostart(autostart).await {
+                error!("Failed to set auto start: {err}")
+            }
+        },
+        Some(Commands::GetAutostart) => get_autostart(),
+        Some(Commands::ModuleVer) => module_version(),
+        Some(Commands::BinVer) => bin_version(),
+        None => info!("zaprett installed. Join us: t.me/zaprett_module"),
     }
+
+    Ok(())
 }
 
 async fn daemonize_nfqws(args: &str) {
@@ -152,18 +186,19 @@ async fn start_service() -> anyhow::Result<()> {
 
     let tmp_dir = MODULE_PATH.join("/tmp");
     if tmp_dir.exists() {
-        fs::remove_dir_all(&tmp_dir)?;
-        fs::create_dir_all(&tmp_dir)?;
+        fs::remove_dir_all(&tmp_dir).await?;
+        fs::create_dir_all(&tmp_dir).await?;
     }
 
-    let reader = BufReader::new(
-        File::open(ZAPRETT_DIR_PATH.join("config.json")).expect("cannot open config.json"),
-    );
-    let config: Config = serde_json::from_reader(reader).expect("invalid json");
+    let mut config_contents = String::new();
+    File::open(ZAPRETT_DIR_PATH.join("config.json"))
+        .await
+        .expect("cannot open config.json")
+        .read_to_string(&mut config_contents).await?;
 
-    let list_type: &String = &config.list_type;
+    let config: Config = serde_json::from_str(&config_contents).expect("invalid json");
 
-    let def_strat: String = String::from("
+    let def_strat = String::from("
         --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new
         --filter-tcp=443 $hostlist --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new
         --filter-tcp=80,443 --dpi-desync=fake,disorder2 --dpi-desync-repeats=6 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new
@@ -171,77 +206,25 @@ async fn start_service() -> anyhow::Result<()> {
         --filter-udp=443 $hostlist --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new
         --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist
         ");
-    let strat = if Path::new(&config.strategy).exists() {
-        fs::read_to_string(&config.strategy).unwrap_or(def_strat)
-    } else {
-        def_strat
-    };
+
+    let start = fs::read_to_string(&config.strategy)
+        .await
+        .unwrap_or(def_strat);
 
     let regex_hostlist = Regex::new(r"\$hostlist")?;
     let regex_ipsets = Regex::new(r"\$ipset")?;
     let regex_zaprettdir = Regex::new(r"\$\{?zaprettdir}?")?;
 
     let mut strat_modified;
+    let (hosts, ipsets) = config.list_type.merge(&config).await;
 
-    if list_type.eq("whitelist") {
-        merge_files(
-            config.active_lists,
-            MODULE_PATH.join("tmp/hostlist").as_path(),
-        )
-        .unwrap();
-        merge_files(
-            config.active_ipsets,
-            MODULE_PATH.join("tmp/ipset").as_path(),
-        )
-        .unwrap();
-
-        let hosts = format!(
-            "--hostlist={}/tmp/hostlist",
-            MODULE_PATH.to_str().unwrap()
-        );
-        let ipsets = format!(
-            "--ipset={}tmp/ipset",
-            MODULE_PATH.to_str().unwrap()
-        );
-
-        strat_modified = regex_hostlist.replace_all(&strat, &hosts).into_owned();
-        strat_modified = regex_ipsets
-            .replace_all(&strat_modified, &ipsets)
-            .into_owned();
-        strat_modified = regex_zaprettdir
-            .replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap())
-            .into_owned();
-    } else if list_type.eq("blacklist") {
-        merge_files(
-            config.active_exclude_lists,
-            MODULE_PATH.join("tmp/hostlist-exclude").as_path(),
-        )
-        .unwrap();
-        merge_files(
-            config.active_exclude_ipsets,
-            MODULE_PATH.join("tmp/ipset-exclude").as_path(),
-        )
-        .unwrap();
-
-        let hosts = format!(
-            "--hostlist-exclude={}/tmp/hostlist-exclude",
-            MODULE_PATH.to_str().unwrap()
-        );
-        let ipsets = format!(
-            "--ipset-exclude={}/tmp/ipset-exclude",
-            MODULE_PATH.to_str().unwrap()
-        );
-
-        strat_modified = regex_hostlist.replace_all(&strat, &hosts).into_owned();
-        strat_modified = regex_ipsets
-            .replace_all(&strat_modified, &ipsets)
-            .into_owned();
-        strat_modified = regex_zaprettdir
-            .replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap())
-            .into_owned();
-    } else {
-        bail!("no list-type called {}", &list_type)
-    }
+    strat_modified = regex_hostlist.replace_all(&start, &hosts).into_owned();
+    strat_modified = regex_ipsets
+        .replace_all(&strat_modified, &ipsets)
+        .into_owned();
+    strat_modified = regex_zaprettdir
+        .replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap())
+        .into_owned();
 
     let ctl = sysctl::Ctl::new("net.netfilter.nf_conntrack_tcp_be_liberal")?;
     ctl.set_value(sysctl::CtlValue::String("1".into()))?;
@@ -260,42 +243,29 @@ async fn stop_service() -> anyhow::Result<()> {
 
     clear_iptables_rules().expect("clear iptables rules");
 
-    let pid_str = fs::read_to_string(MODULE_PATH.join("tmp/pid.lock").as_path())?;
+    let pid_str = fs::read_to_string(MODULE_PATH.join("tmp/pid.lock")).await?;
     let pid = pid_str.trim().parse::<i32>()?;
 
     kill(Pid::from_raw(pid), Signal::SIGKILL)?;
 
-    /*for proc in all_processes().unwrap() {
-        if let Ok(p) = proc {
-            if let Ok(stat) = p.stat() {
-                if stat.comm == "zaprett" {
-                    let pid = Pid::from_raw(p.pid as i32);
-                    if let Err(_) = kill(pid, Signal::SIGTERM) {
-                        println!("failed to stop zaprett service")
-                    } else {
-                        println!("zaprett service stopped!")
-                    }
-                }
-            }
-        }
-    }*/
     Ok(())
 }
 
-async fn restart_service() {
-    stop_service().await.unwrap();
-    start_service().await.unwrap();
-    info!("zaprett service restarted!")
+async fn restart_service() -> anyhow::Result<()> {
+    stop_service().await?;
+    start_service().await?;
+    info!("zaprett service restarted!");
+    Ok(())
 }
 
-fn set_autostart(autostart: &bool) {
+async fn set_autostart(autostart: &bool) -> Result<(), anyhow::Error> {
     if *autostart {
-        if let Err(e) = File::create(MODULE_PATH.join("autostart")) {
-            error!("Autostart: cannot create flag file: {e}");
-        }
+        File::create(MODULE_PATH.join("autostart")).await?;
     } else {
-        fs::remove_file(MODULE_PATH.join("autostart")).unwrap()
+        fs::remove_file(MODULE_PATH.join("autostart")).await?;
     }
+
+    Ok(())
 }
 
 fn get_autostart() {
@@ -303,8 +273,9 @@ fn get_autostart() {
     println!("{}", file.exists());
 }
 
-fn service_status() -> bool {
+async fn service_status() -> bool {
     fs::read_to_string(MODULE_PATH.join("tmp/pid.lock"))
+        .await
         .ok()
         .and_then(|pid_str| pid_str.trim().parse::<i32>().ok())
         .is_some()
@@ -330,23 +301,31 @@ fn bin_version() {
     println!("{}", env!("ZAPRET_VERSION"));
 }
 
-fn merge_files(
-    input_paths: Vec<String>,
-    output_path: &Path,
+pub async fn merge_files(
+    input_paths: &[impl AsRef<Path>],
+    output_path: impl AsRef<Path>,
 ) -> Result<(), Box<dyn error::Error>> {
-    let mut combined_content = String::new();
+    let output_path = output_path.as_ref();
+    let mut output_file = tokio::fs::File::create(output_path).await?;
 
-    for path_str in input_paths {
-        let path = Path::new(&path_str);
-        let mut file = File::open(path)?;
-        let mut content = String::new();
-        file.read_to_string(&mut content)?;
-        combined_content.push_str(&content);
+    for input in input_paths {
+        let input_path = input.as_ref();
+        let mut input_file = tokio::fs::File::open(input_path)
+            .await
+            .map_err(|e| format!("Failed to open {}: {}", input_path.display(), e))?;
+
+        tokio::io::copy(&mut input_file, &mut output_file)
+            .await
+            .map_err(|e| {
+                format!(
+                    "Failed to write contents of {}: {}",
+                    input_path.display(),
+                    e
+                )
+            })?;
     }
 
-    let mut output_file = File::create(output_path)?;
-    output_file.write_all(combined_content.as_bytes())?;
-
+    output_file.flush().await?;
     Ok(())
 }
 
@@ -401,7 +380,7 @@ fn clear_iptables_rules() -> Result<(), Box<dyn error::Error>> {
 }
 
 async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
-    if service_status() {
+    if service_status().await {
         bail!("nfqws already started!");
     }
 

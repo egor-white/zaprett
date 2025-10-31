@@ -16,12 +16,16 @@ rel_manifest_path!(NFQ_CRYPTO, "zapret/nfq/crypto");
 
 fn main() {
     cc::Build::new()
-        .files(glob::glob(&format!("{}/*.c", NFQ.display()))
-            .unwrap()
-            .filter_map(Result::ok))
-        .files(glob::glob(&format!("{}/*.c", NFQ_CRYPTO.display()))
-            .unwrap()
-            .filter_map(Result::ok))
+        .files(
+            glob::glob(&format!("{}/*.c", NFQ.display()))
+                .unwrap()
+                .filter_map(Result::ok),
+        )
+        .files(
+            glob::glob(&format!("{}/*.c", NFQ_CRYPTO.display()))
+                .unwrap()
+                .filter_map(Result::ok),
+        )
         .include(&*NFQ)
         .include(&*NFQ_CRYPTO)
         .flag("-w")
