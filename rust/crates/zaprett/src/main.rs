@@ -119,13 +119,13 @@ async fn main() -> anyhow::Result<()> {
             Ok(())
         }
         None => {
-            println!("zaprett installed. Join us: t.me/zaprett_module");
+            info!("zaprett installed. Join us: t.me/zaprett_module");
             Ok(())
         }
     }
 }
 
-async fn daemonize_nfqws(args: &String) {
+async fn daemonize_nfqws(args: &str) {
     info!("Starting nfqws as a daemon");
     let daemonize = Daemonize::new()
         .pid_file(MODULE_PATH.join("tmp/pid.lock").as_path())
@@ -147,7 +147,7 @@ async fn start_service() -> anyhow::Result<()> {
         bail!("Running not from root, exiting");
     };
 
-    println!("Starting zaprett service...");
+    info!("Starting zaprett service...");
 
     let tmp_dir = MODULE_PATH.join("/tmp");
     if tmp_dir.exists() {
@@ -171,14 +171,14 @@ async fn start_service() -> anyhow::Result<()> {
         --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist
         ");
     let strat = if Path::new(&config.strategy).exists() {
-        fs::read_to_string(&config.strategy).unwrap_or_else(|_| def_strat)
+        fs::read_to_string(&config.strategy).unwrap_or(def_strat)
     } else {
         def_strat
     };
 
-    let regex_hostlist = Regex::new(r"\$hostlist").unwrap();
-    let regex_ipsets = Regex::new(r"\$ipset").unwrap();
-    let regex_zaprettdir = Regex::new(r"\$\{?zaprettdir\}?").unwrap();
+    let regex_hostlist = Regex::new(r"\$hostlist")?;
+    let regex_ipsets = Regex::new(r"\$ipset")?;
+    let regex_zaprettdir = Regex::new(r"\$\{?zaprettdir}?")?;
 
     let mut strat_modified;
 
@@ -194,21 +194,21 @@ async fn start_service() -> anyhow::Result<()> {
         )
         .unwrap();
 
-        let hosts = String::from(format!(
+        let hosts = format!(
             "--hostlist={}/tmp/hostlist",
             MODULE_PATH.to_str().unwrap()
-        ));
-        let ipsets = String::from(format!(
+        );
+        let ipsets = format!(
             "--ipset={}tmp/ipset",
             MODULE_PATH.to_str().unwrap()
-        ));
+        );
 
         strat_modified = regex_hostlist.replace_all(&strat, &hosts).into_owned();
         strat_modified = regex_ipsets
             .replace_all(&strat_modified, &ipsets)
             .into_owned();
         strat_modified = regex_zaprettdir
-            .replace_all(&strat_modified, &*ZAPRETT_DIR_PATH.to_str().unwrap())
+            .replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap())
             .into_owned();
     } else if list_type.eq("blacklist") {
         merge_files(
@@ -222,32 +222,32 @@ async fn start_service() -> anyhow::Result<()> {
         )
         .unwrap();
 
-        let hosts = String::from(format!(
+        let hosts = format!(
             "--hostlist-exclude={}/tmp/hostlist-exclude",
             MODULE_PATH.to_str().unwrap()
-        ));
-        let ipsets = String::from(format!(
+        );
+        let ipsets = format!(
             "--ipset-exclude={}/tmp/ipset-exclude",
             MODULE_PATH.to_str().unwrap()
-        ));
+        );
 
         strat_modified = regex_hostlist.replace_all(&strat, &hosts).into_owned();
         strat_modified = regex_ipsets
             .replace_all(&strat_modified, &ipsets)
             .into_owned();
         strat_modified = regex_zaprettdir
-            .replace_all(&strat_modified, &*ZAPRETT_DIR_PATH.to_str().unwrap())
+            .replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap())
             .into_owned();
     } else {
-        panic!("no list-type called {}", &list_type)
+        bail!("no list-type called {}", &list_type)
     }
 
-    let ctl = sysctl::Ctl::new("net.netfilter.nf_conntrack_tcp_be_liberal").unwrap();
-    ctl.set_value(sysctl::CtlValue::String("1".into())).unwrap();
+    let ctl = sysctl::Ctl::new("net.netfilter.nf_conntrack_tcp_be_liberal")?;
+    ctl.set_value(sysctl::CtlValue::String("1".into()))?;
 
     setup_iptables_rules();
     daemonize_nfqws(&strat_modified).await;
-    println!("zaprett service started!");
+    info!("zaprett service started!");
     Ok(())
 }
 
@@ -261,7 +261,7 @@ async fn stop_service() -> anyhow::Result<()> {
     let pid_str = fs::read_to_string(MODULE_PATH.join("tmp/pid.lock").as_path())?;
     let pid = pid_str.trim().parse::<i32>()?;
 
-    kill(Pid::from_raw(pid), Signal::SIGKILL).unwrap();
+    kill(Pid::from_raw(pid), Signal::SIGKILL)?;
 
     /*for proc in all_processes().unwrap() {
         if let Ok(p) = proc {
@@ -283,12 +283,12 @@ async fn stop_service() -> anyhow::Result<()> {
 async fn restart_service() {
     stop_service().await.unwrap();
     start_service().await.unwrap();
-    println!("zaprett service restarted!")
+    info!("zaprett service restarted!")
 }
 
 fn set_autostart(autostart: &bool) {
     if *autostart {
-        if let Err(e) = std::fs::File::create(MODULE_PATH.join("autostart")) {
+        if let Err(e) = File::create(MODULE_PATH.join("autostart")) {
             eprintln!("autostart: cannot create flag file: {e}");
         }
     } else {
@@ -302,15 +302,15 @@ fn get_autostart() {
 }
 
 fn service_status() -> bool {
-    let pid_str = match fs::read_to_string(MODULE_PATH.join("tmp/pid.lock")) {
-        Ok(s) => s,
-        Err(_) => return false,
+    let Ok(pid_str) = fs::read_to_string(MODULE_PATH.join("tmp/pid.lock")) else {
+        return false;
     };
-    let pid = match pid_str.trim().parse::<i32>() {
-        Ok(p) => p,
-        Err(_) => return false,
+
+    let Ok(_) = pid_str.trim().parse::<i32>() else {
+        return false;
     };
-    return true
+
+    true
     /*match all_processes() {
         Ok(iter) => iter
             .filter_map(|rp| rp.ok())
@@ -321,12 +321,11 @@ fn service_status() -> bool {
 }
 
 fn module_version() {
-    if let Ok(prop) = Ini::load_from_file(MODULE_PATH.join("module.prop")) {
-        if let Some(props) = prop.section::<String>(None) {
-            if let Some(v) = props.get("version") {
-                println!("{}", v);
-            }
-        }
+    if let Ok(prop) = Ini::load_from_file(MODULE_PATH.join("module.prop"))
+        && let Some(props) = prop.section::<String>(None)
+        && let Some(version) = props.get("version")
+    {
+        println!("{version}");
     }
 }
 
@@ -403,7 +402,7 @@ fn clear_iptables_rules() {
     // .unwrap();
 }
 
-async fn run_nfqws(args_str: &String) -> anyhow::Result<()> {
+async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
     if service_status() {
         bail!("nfqws already started!");
     }
@@ -413,11 +412,10 @@ async fn run_nfqws(args_str: &String) -> anyhow::Result<()> {
     if args_str.trim().is_empty() {
         args.push("-v".to_string());
     } else {
-        args.extend(args_str.trim().split_whitespace().map(String::from));
+        args.extend(args_str.split_whitespace().map(String::from));
     }
 
-    // fire-and-forget
-    let _ = task::spawn_blocking(move || {
+    task::spawn_blocking(move || {
         let c_args: Vec<CString> = args
             .into_iter()
             .map(|arg| CString::new(arg).unwrap())
