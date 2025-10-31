@@ -1,0 +1,49 @@
+ANDROID_NDK_VERSION := "r27d-linux"
+TARGET := `pwd` + "/target"
+export NDK_HOME := TARGET + "/android-ndk-" + ANDROID_NDK_VERSION
+
+_download_android_ndk:
+    #!/usr/bin/env sh
+    if [ ! -d "{{NDK_HOME}}" ]; then
+        echo "Downloading ndk {{ANDROID_NDK_VERSION}} to {{NDK_HOME}}"
+        TMPFILE="{{NDK_HOME}}.tmp"
+        TMPDIR="{{NDK_HOME}}.extracted.tmp"
+
+        curl -L -C - -o "$TMPFILE" "https://dl.google.com/android/repository/android-ndk-{{ANDROID_NDK_VERSION}}.zip"
+
+        unzip "$TMPFILE" -d "$TMPDIR"
+
+        inner_folder=$(find "$TMPDIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+        mv -T "$inner_folder" "$NDK_HOME"
+
+        rm -rf "$TMPFILE" "$TMPDIR"
+
+        echo "Android ndk {{ANDROID_NDK_VERSION}} successfully installed in {{NDK_HOME}}"
+    else
+        echo "Android ndk {{ANDROID_NDK_VERSION}} already installed in {{NDK_HOME}}"
+    fi
+
+_clone_repo_or_update url dir:
+    #!/usr/bin/env sh
+    if [ -d "{{dir}}" ]; then
+        echo "Repository {{url}} already exists - updating..."
+        cd "{{dir}}" && git pull
+    else
+        git clone "{{url}}" "{{dir}}"
+    fi
+
+_prepare_android_ndk: _download_android_ndk
+
+prepare-android: _prepare_android_ndk
+    #!/usr/bin/env sh
+    cargo install cargo-ndk
+
+    targets=("armv7-linux-androideabi" "aarch64-linux-android" "i686-linux-android" "x86_64-linux-android")
+    for t in "${targets[@]}"; do
+        if ! rustup target list --installed | grep -q "$t"; then
+            echo "Installing missing target: $t"
+            rustup target add "$t"
+        else
+            echo "Target already installed: $t"
+        fi
+    done
