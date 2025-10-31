@@ -33,6 +33,10 @@ fn main() {
     println!("cargo:rustc-link-lib=nfnetlink");
     println!("cargo:rustc-link-lib=mnl");
 
+    if let Ok(link_libs) = env::var("NETFILTER_LIBS") {
+        println!("cargo:rustc-link-search=native={link_libs}/lib");
+    }
+
     println!("cargo:rustc-link-lib=static=nfqws");
     println!("cargo:rerun-if-changed={}", NFQ.display());
     println!("cargo:rerun-if-changed={}", NFQ_CRYPTO.display());

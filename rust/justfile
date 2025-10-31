@@ -5,6 +5,8 @@ export ANDROID_NDK_VERSION := "r27d-linux"
 
 TARGET := `pwd` + "/target"
 
+export NETFILTER_LIBS := TARGET + "/netfilter_libs"
+
 export NDK_HOME := TARGET + "/android-ndk-" + ANDROID_NDK_VERSION
 
 _download_android_ndk:
@@ -30,35 +32,39 @@ _download_android_ndk:
 
 _build_netfilter_libs:
     #!/usr/bin/env sh
-    export DEPS_DIR="{{TARGET}}/netfilter"
-    cd "{{TARGET}}"
 
-    export TARGET=arm-linux-androideabi
-    export TOOLCHAIN=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
-    export CC="$TOOLCHAIN/bin/clang --target=$TARGET$ANDROID_API"
-    export AR=$TOOLCHAIN/bin/llvm-ar
-    export AS=$CC
-    export LD=$TOOLCHAIN/bin/ld
-    export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
-    export STRIP=$TOOLCHAIN/bin/llvm-strip
-    export PKG_CONFIG_PATH=$DEPS_DIR/lib/pkgconfig
+    if [ ! -d "{{NETFILTER_LIBS}}" ]; then
+        export PATCH="$(pwd)/libnetfilter_queue-android.patch"
+        cd "{{TARGET}}"
 
-    wget -O- https://www.netfilter.org/pub/libnfnetlink/libnfnetlink-1.0.2.tar.bz2 | tar -xj
-    wget -O- https://www.netfilter.org/pub/libmnl/libmnl-1.0.5.tar.bz2 | tar -xj
-    wget -O- https://www.netfilter.org/pub/libnetfilter_queue/libnetfilter_queue-1.0.5.tar.bz2 | tar -xj
-    patch -p1 -d libnetfilter_queue-* -i ../libnetfilter_queue-android.patch
+        export TARGET=arm-linux-androideabi
+        export TOOLCHAIN=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
+        export CC="$TOOLCHAIN/bin/clang --target=$TARGET$ANDROID_API"
+        export AR=$TOOLCHAIN/bin/llvm-ar
+        export AS=$CC
+        export LD=$TOOLCHAIN/bin/ld
+        export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
+        export STRIP=$TOOLCHAIN/bin/llvm-strip
+        export PKG_CONFIG_PATH=$NETFILTER_LIBS/lib/pkgconfig
 
-    for i in libmnl libnfnetlink libnetfilter_queue ; do
-    (
-        cd $i-*
-        autoreconf "-fi"
-        CFLAGS="-Os -flto=auto -Wno-implicit-function-declaration" \
-        ./configure --prefix= --host=$TARGET --enable-static --disable-shared --disable-dependency-tracking
-        make -j$(nproc)
-        make install DESTDIR=$DEPS_DIR
-    )
-        sed -i "s|^prefix=.*|prefix=$DEPS_DIR|g" $DEPS_DIR/lib/pkgconfig/$i.pc
-    done
+        wget -O- https://www.netfilter.org/pub/libnfnetlink/libnfnetlink-1.0.2.tar.bz2 | tar -xj
+        wget -O- https://www.netfilter.org/pub/libmnl/libmnl-1.0.5.tar.bz2 | tar -xj
+        wget -O- https://www.netfilter.org/pub/libnetfilter_queue/libnetfilter_queue-1.0.5.tar.bz2 | tar -xj
+        patch -p1 -d libnetfilter_queue-* -i $PATCH
+
+        for i in libmnl libnfnetlink libnetfilter_queue ; do
+        (
+            cd $i-*
+            CFLAGS="-Os -flto=auto -Wno-implicit-function-declaration" \
+            ./configure --prefix= --host=$TARGET --enable-static --disable-shared --disable-dependency-tracking
+            make -j$(nproc)
+            make install DESTDIR=$NETFILTER_LIBS
+        )
+            sed -i "s|^prefix=.*|prefix=$NETFILTER_LIBS|g" $NETFILTER_LIBS/lib/pkgconfig/$i.pc
+        done
+    else
+        echo "netfilter libs already built"
+    fi
 
 prepare-android: _download_android_ndk _build_netfilter_libs
     #!/usr/bin/env sh
@@ -73,3 +79,10 @@ prepare-android: _download_android_ndk _build_netfilter_libs
             echo "Target already installed: $t"
         fi
     done
+
+build-android *args: prepare-android
+    #!/usr/bin/env sh
+    export CFLAGS="-I $NETFILTER_LIBS/include"
+    export LDFLAGS="-L $NETFILTER_LIBS/lib"
+    export CXXFLAGS="$CFLAGS"
+    cargo ndk -t armv7-linux-androideabi -t aarch64-linux-android -t x86\_64-linux-android --platform $ANDROID_API build {{args}}

@@ -7,9 +7,7 @@ repository.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-iptables = { workspace = true }
 libc = { workspace = true }
-procfs = { workspace = true }
 regex = { workspace = true }
 rust-ini = { workspace = true }
 serde = { workspace = true }

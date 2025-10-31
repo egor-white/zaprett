@@ -6,7 +6,6 @@ use libnfqws::nfqws_main;
 use log::{error, info};
 use nix::sys::signal::{Signal, kill};
 use nix::unistd::{Pid, Uid};
-use procfs::process::all_processes;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::ffi::CString;
@@ -303,13 +302,14 @@ fn get_autostart() {
 }
 
 fn service_status() -> bool {
-    match all_processes() {
-        Ok(iter) => iter
-            .filter_map(|rp| rp.ok())
-            .filter_map(|p| p.stat().ok())
-            .any(|st| st.comm == "zaprett"),
-        Err(_) => false,
-    }
+    unimplemented!();
+    // match all_processes() {
+    //     Ok(iter) => iter
+    //         .filter_map(|rp| rp.ok())
+    //         .filter_map(|p| p.stat().ok())
+    //         .any(|st| st.comm == "zaprett"),
+    //     Err(_) => false,
+    // }
 }
 
 fn module_version() {
@@ -346,51 +346,53 @@ fn merge_files(
 }
 
 fn setup_iptables_rules() {
-    let ipt = iptables::new(false).unwrap();
-
-    ipt.insert(
-        "mangle",
-        "POSTROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-        1,
-    )
-    .unwrap();
-    ipt.insert(
-        "mangle",
-        "PREROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-        1,
-    )
-    .unwrap();
-    ipt.append(
-        "filter",
-        "FORWARD",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )
-    .unwrap();
+    todo!();
+    // let ipt = iptables::new(false).unwrap();
+    //
+    // ipt.insert(
+    //     "mangle",
+    //     "POSTROUTING",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    //     1,
+    // )
+    // .unwrap();
+    // ipt.insert(
+    //     "mangle",
+    //     "PREROUTING",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    //     1,
+    // )
+    // .unwrap();
+    // ipt.append(
+    //     "filter",
+    //     "FORWARD",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    // )
+    // .unwrap();
 }
 
 fn clear_iptables_rules() {
-    let ipt = iptables::new(false).unwrap();
-
-    ipt.delete(
-        "mangle",
-        "POSTROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )
-    .unwrap();
-    ipt.delete(
-        "mangle",
-        "PREROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )
-    .unwrap();
-    ipt.delete(
-        "filter",
-        "FORWARD",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )
-    .unwrap();
+    todo!();
+    // let ipt = iptables::new(false).unwrap();
+    //
+    // ipt.delete(
+    //     "mangle",
+    //     "POSTROUTING",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    // )
+    // .unwrap();
+    // ipt.delete(
+    //     "mangle",
+    //     "PREROUTING",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    // )
+    // .unwrap();
+    // ipt.delete(
+    //     "filter",
+    //     "FORWARD",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    // )
+    // .unwrap();
 }
 
 async fn run_nfqws(args_str: &String) -> anyhow::Result<()> {
