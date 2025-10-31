@@ -1,12 +1,3 @@
-[submodule "rust/libs/zapret"]
-	path = rust/libs/zapret
-	url = https://github.com/bol-van/zapret.git
-[submodule "rust/crates/libnfqws/libs/zapret"]
-	path = rust/crates/libnfqws/libs/zapret
-	url = https://github.com/bol-van/zapret.git
 [submodule "rust/crates/libnfqws/zapret"]
 	path = rust/crates/libnfqws/zapret
 	url = https://github.com/bol-van/zapret.git
-[submodule "rust/crates/iptables"]
-	path = rust/crates/iptables
-	url = https://github.com/yaa110/rust-iptables

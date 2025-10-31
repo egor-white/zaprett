@@ -1,3 +1,4 @@
+use std::error;
 use anyhow::bail;
 use clap::{ArgAction, Parser, Subcommand, builder::BoolishValueParser};
 use daemonize::Daemonize;
@@ -151,8 +152,8 @@ async fn start_service() -> anyhow::Result<()> {
 
     let tmp_dir = MODULE_PATH.join("/tmp");
     if tmp_dir.exists() {
-        fs::remove_dir_all(&tmp_dir).unwrap();
-        fs::create_dir_all(&tmp_dir).unwrap();
+        fs::remove_dir_all(&tmp_dir)?;
+        fs::create_dir_all(&tmp_dir)?;
     }
 
     let reader = BufReader::new(
@@ -245,7 +246,8 @@ async fn start_service() -> anyhow::Result<()> {
     let ctl = sysctl::Ctl::new("net.netfilter.nf_conntrack_tcp_be_liberal")?;
     ctl.set_value(sysctl::CtlValue::String("1".into()))?;
 
-    setup_iptables_rules();
+    setup_iptables_rules().expect("setup iptables rules");
+
     daemonize_nfqws(&strat_modified).await;
     info!("zaprett service started!");
     Ok(())
@@ -256,7 +258,7 @@ async fn stop_service() -> anyhow::Result<()> {
         bail!("Running not from root, exiting");
     };
 
-    clear_iptables_rules();
+    clear_iptables_rules().expect("clear iptables rules");
 
     let pid_str = fs::read_to_string(MODULE_PATH.join("tmp/pid.lock").as_path())?;
     let pid = pid_str.trim().parse::<i32>()?;
@@ -289,7 +291,7 @@ async fn restart_service() {
 fn set_autostart(autostart: &bool) {
     if *autostart {
         if let Err(e) = File::create(MODULE_PATH.join("autostart")) {
-            eprintln!("autostart: cannot create flag file: {e}");
+            error!("Autostart: cannot create flag file: {e}");
         }
     } else {
         fs::remove_file(MODULE_PATH.join("autostart")).unwrap()
@@ -302,15 +304,10 @@ fn get_autostart() {
 }
 
 fn service_status() -> bool {
-    let Ok(pid_str) = fs::read_to_string(MODULE_PATH.join("tmp/pid.lock")) else {
-        return false;
-    };
-
-    let Ok(_) = pid_str.trim().parse::<i32>() else {
-        return false;
-    };
-
-    true
+    fs::read_to_string(MODULE_PATH.join("tmp/pid.lock"))
+        .ok()
+        .and_then(|pid_str| pid_str.trim().parse::<i32>().ok())
+        .is_some()
     /*match all_processes() {
         Ok(iter) => iter
             .filter_map(|rp| rp.ok())
@@ -332,10 +329,11 @@ fn module_version() {
 fn bin_version() {
     println!("{}", env!("ZAPRET_VERSION"));
 }
+
 fn merge_files(
     input_paths: Vec<String>,
     output_path: &Path,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<(), Box<dyn error::Error>> {
     let mut combined_content = String::new();
 
     for path_str in input_paths {
@@ -352,54 +350,54 @@ fn merge_files(
     Ok(())
 }
 
-fn setup_iptables_rules() {
-    todo!();
-    // let ipt = iptables::new(false).unwrap();
-    //
-    // ipt.insert(
-    //     "mangle",
-    //     "POSTROUTING",
-    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
-    //     1,
-    // )
-    // .unwrap();
-    // ipt.insert(
-    //     "mangle",
-    //     "PREROUTING",
-    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
-    //     1,
-    // )
-    // .unwrap();
-    // ipt.append(
-    //     "filter",
-    //     "FORWARD",
-    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
-    // )
-    // .unwrap();
+fn setup_iptables_rules() -> Result<(), Box<dyn error::Error>> {
+    let ipt = iptables::new(false)?;
+
+    ipt.insert(
+        "mangle",
+        "POSTROUTING",
+        "-j NFQUEUE --queue-num 200 --queue-bypass",
+        1,
+    )?;
+
+    ipt.insert(
+        "mangle",
+        "PREROUTING",
+        "-j NFQUEUE --queue-num 200 --queue-bypass",
+        1,
+    )?;
+
+    ipt.append(
+        "filter",
+        "FORWARD",
+        "-j NFQUEUE --queue-num 200 --queue-bypass",
+    )?;
+
+    Ok(())
 }
 
-fn clear_iptables_rules() {
-    todo!();
-    // let ipt = iptables::new(false).unwrap();
-    //
-    // ipt.delete(
-    //     "mangle",
-    //     "POSTROUTING",
-    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
-    // )
-    // .unwrap();
-    // ipt.delete(
-    //     "mangle",
-    //     "PREROUTING",
-    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
-    // )
-    // .unwrap();
-    // ipt.delete(
-    //     "filter",
-    //     "FORWARD",
-    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
-    // )
-    // .unwrap();
+fn clear_iptables_rules() -> Result<(), Box<dyn error::Error>> {
+    let ipt = iptables::new(false)?;
+
+    ipt.delete(
+        "mangle",
+        "POSTROUTING",
+        "-j NFQUEUE --queue-num 200 --queue-bypass",
+    )?;
+
+    ipt.delete(
+        "mangle",
+        "PREROUTING",
+        "-j NFQUEUE --queue-num 200 --queue-bypass",
+    )?;
+
+    ipt.delete(
+        "filter",
+        "FORWARD",
+        "-j NFQUEUE --queue-num 200 --queue-bypass",
+    )?;
+
+    Ok(())
 }
 
 async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
