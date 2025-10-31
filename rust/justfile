@@ -28,80 +28,39 @@ _download_android_ndk:
         echo "Android ndk {{ANDROID_NDK_VERSION}} already installed in {{NDK_HOME}}"
     fi
 
-_clone_repo_or_update url dir PATH_URL="":
+_build_netfilter_libs:
     #!/usr/bin/env sh
-    if [ -d "{{dir}}" ]; then
-        echo "Repository {{url}} already exists - updating..."
-        cd "{{dir}}" && git pull
-    else
-        git clone "{{url}}" "{{dir}}"
-    fi
+    export DEPS_DIR="{{TARGET}}/netfilter"
+    cd "{{TARGET}}"
 
-    if [ -n "{{PATH_URL}}" ]; then
-        echo "Downloading and applying patch from {{PATH_URL}}..."
-        cd "{{dir}}"
-
-        PATCH_FILE="$(mktemp /tmp/patch.XXXXXX.patch)"
-        curl -L -o "$PATCH_FILE" "{{PATH_URL}}"
-
-        git apply --reject --whitespace=fix "$PATCH_FILE"
-        rm "$PATCH_FILE"
-
-        echo "Patch applied successfully."
-    fi
-
-_build_lib REPO DEST BUILD_DIR CFLAGS="" LDFLAGS="" PATH_URL="":
-    #!/usr/bin/env sh
-    export API={{ANDROID_API}}
-    export ARCH=arm
-    export TARGET=armv7a-linux-androideabi
-    export TOOLCHAIN={{NDK_HOME}}/toolchains/llvm/prebuilt/linux-x86_64
-
+    export TARGET=arm-linux-androideabi
+    export TOOLCHAIN=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
+    export CC="$TOOLCHAIN/bin/clang --target=$TARGET$ANDROID_API"
     export AR=$TOOLCHAIN/bin/llvm-ar
-    export AS=$TOOLCHAIN/bin/llvm-as
-    export CC=$TOOLCHAIN/bin/$TARGET$API-clang
-    export CXX=$TOOLCHAIN/bin/$TARGET$API-clang++
+    export AS=$CC
     export LD=$TOOLCHAIN/bin/ld
+    export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
     export STRIP=$TOOLCHAIN/bin/llvm-strip
+    export PKG_CONFIG_PATH=$DEPS_DIR/lib/pkgconfig
 
-    just _clone_repo_or_update {{REPO}} "{{DEST}}" "{{PATH_URL}}"
-    cd "{{DEST}}"
-    autoreconf -fi
-    CFLAGS="{{CFLAGS}}" LDFLAGS="{{LDFLAGS}}" \
-        ./configure --host=arm-linux-androideabi --prefix="{{BUILD_DIR}}"
-    make -j"$(nproc)"
-    make install
+    wget -O- https://www.netfilter.org/pub/libnfnetlink/libnfnetlink-1.0.2.tar.bz2 | tar -xj
+    wget -O- https://www.netfilter.org/pub/libmnl/libmnl-1.0.5.tar.bz2 | tar -xj
+    wget -O- https://www.netfilter.org/pub/libnetfilter_queue/libnetfilter_queue-1.0.5.tar.bz2 | tar -xj
+    patch -p1 -d libnetfilter_queue-* -i ../libnetfilter_queue-android.patch
 
+    for i in libmnl libnfnetlink libnetfilter_queue ; do
+    (
+        cd $i-*
+        autoreconf "-fi"
+        CFLAGS="-Os -flto=auto -Wno-implicit-function-declaration" \
+        ./configure --prefix= --host=$TARGET --enable-static --disable-shared --disable-dependency-tracking
+        make -j$(nproc)
+        make install DESTDIR=$DEPS_DIR
+    )
+        sed -i "s|^prefix=.*|prefix=$DEPS_DIR|g" $DEPS_DIR/lib/pkgconfig/$i.pc
+    done
 
-_build_libnfnetlink:
-    #!/usr/bin/env sh
-    just _build_lib \
-        https://git.netfilter.org/libnfnetlink \
-        "{{TARGET}}/libnfnetlink" \
-        "{{TARGET}}/libnfnetlink/build"
-
-_build_libmnl:
-    #!/usr/bin/env sh
-    just _build_lib \
-        https://git.netfilter.org/libmnl \
-        "{{TARGET}}/libmnl" \
-        "{{TARGET}}/libmnl/build"
-
-_build_libnetfilter_queue: _build_libmnl _build_libnfnetlink
-    #!/usr/bin/env sh
-    export LIBMNL_BUILD="{{TARGET}}/libmnl/build"
-    export LIBNFNETLINK_BUILD="{{TARGET}}/libnfnetlink/build"
-    just _build_lib \
-        https://git.netfilter.org/libnetfilter_queue \
-        "{{TARGET}}/libnetfilter_queue" \
-        "{{TARGET}}/libnetfilter_queue/build" \
-        "-I$LIBMNL_BUILD/include -I$LIBNFNETLINK_BUILD/include" \
-        "-L$LIBMNL_BUILD/lib -L$LIBNFNETLINK_BUILD/lib" \
-        "https://raw.githubusercontent.com/bol-van/zapret/refs/heads/master/.github/workflows/libnetfilter_queue-android.patch"
-
-_build_zapret_libraries: _download_android_ndk _build_libnetfilter_queue
-
-prepare-android: _build_zapret_libraries
+prepare-android: _download_android_ndk _build_netfilter_libs
     #!/usr/bin/env sh
     cargo install cargo-ndk
 
