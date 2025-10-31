@@ -30,7 +30,7 @@ _download_android_ndk:
         echo "Android ndk {{ANDROID_NDK_VERSION}} already installed in {{NDK_HOME}}"
     fi
 
-_build_netfilter_libs abi target_arch:
+_build_netfilter_libs target_arch:
     #!/usr/bin/env sh
 
     if [ ! -d "{{NETFILTER_LIBS}}-{{target_arch}}" ]; then
@@ -41,7 +41,6 @@ _build_netfilter_libs abi target_arch:
         export CC="$TOOLCHAIN/bin/clang --target={{target_arch}}$ANDROID_API"
         export AR=$TOOLCHAIN/bin/llvm-ar
         export AS=$CC
-        export ABI={{abi}}
         export LD=$TOOLCHAIN/bin/ld
         export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
         export STRIP=$TOOLCHAIN/bin/llvm-strip
@@ -63,6 +62,7 @@ _build_netfilter_libs abi target_arch:
         for i in libmnl libnfnetlink libnetfilter_queue ; do
         (
             cd $i-*
+            make clean
             CFLAGS="-Os -flto=auto -Wno-implicit-function-declaration" \
             ./configure --prefix= --host={{target_arch}} --enable-static --disable-shared --disable-dependency-tracking
             make -j$(nproc)
@@ -71,39 +71,37 @@ _build_netfilter_libs abi target_arch:
             sed -i "s|^prefix=.*|prefix=$NETFILTER_LIBS-{{target_arch}}|g" $NETFILTER_LIBS-{{target_arch}}/lib/pkgconfig/$i.pc
         done
     else
-        echo "netfilter libs for {{target_arch}} already built"
+        echo "Netfilter libs for {{target_arch}} already built"
+    fi
+
+_instal_rust_target target:
+    #!/usr/bin/env sh
+    if ! rustup target list --installed | grep -q "{{target}}"; then
+        echo "Installing missing target: {{target}}"
+        rustup target add "{{target}}"
+    else
+        echo "Target already installed: {{target}}"
     fi
 
 prepare-android: _download_android_ndk
     #!/usr/bin/env sh
     cargo install cargo-ndk
 
-    targets=("armv7-linux-androideabi" "aarch64-linux-android" "i686-linux-android" "x86_64-linux-android")
-    for t in "${targets[@]}"; do
-        if ! rustup target list --installed | grep -q "$t"; then
-            echo "Installing missing target: $t"
-            rustup target add "$t"
-        else
-            echo "Target already installed: $t"
-        fi
-    done
-
 build-android *args: prepare-android
     #!/usr/bin/env sh
 
-    targets=("armv7-linux-androideabi")
-    abis=("armeabi-v7a")
+    targets=("armv7-linux-androideabi" "aarch64-linux-android" "x86_64-linux-android")
 
     for i in "${!targets[@]}"; do
         t=${targets[$i]}
-        a=${abis[$i]}
         (
-            echo "Building target=$t, abi=$a"
+            echo "Building target $t"
             export CFLAGS="-I$NETFILTER_LIBS-$t/include"
             export LDFLAGS="-L$NETFILTER_LIBS-$t/lib"
             export CXXFLAGS="$CFLAGS"
 
-            just _build_netfilter_libs $a $t
+            just _build_netfilter_libs $t
+            just _instal_rust_target $t
             NETFILTER_LIBS=$NETFILTER_LIBS-$t cargo ndk -t $t --platform $ANDROID_API build {{args}}
         )
     done
