@@ -905,7 +905,6 @@ dependencies = [
  "libnfqws",
  "log",
  "nix",
- "once_cell",
  "pretty_env_logger",
  "regex",
  "rust-ini",

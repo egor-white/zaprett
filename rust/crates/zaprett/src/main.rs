@@ -302,14 +302,22 @@ fn get_autostart() {
 }
 
 fn service_status() -> bool {
-    unimplemented!();
-    // match all_processes() {
-    //     Ok(iter) => iter
-    //         .filter_map(|rp| rp.ok())
-    //         .filter_map(|p| p.stat().ok())
-    //         .any(|st| st.comm == "zaprett"),
-    //     Err(_) => false,
-    // }
+    let pid_str = match fs::read_to_string(MODULE_PATH.join("tmp/pid.lock")) {
+        Ok(s) => s,
+        Err(_) => return false,
+    };
+    let pid = match pid_str.trim().parse::<i32>() {
+        Ok(p) => p,
+        Err(_) => return false,
+    };
+    return true
+    /*match all_processes() {
+        Ok(iter) => iter
+            .filter_map(|rp| rp.ok())
+            .filter_map(|p| p.stat().ok())
+            .any(|st| st.pid == pid),
+        Err(_) => false,
+    }*/
 }
 
 fn module_version() {
