@@ -28,7 +28,7 @@ _download_android_ndk:
         echo "Android ndk {{ANDROID_NDK_VERSION}} already installed in {{NDK_HOME}}"
     fi
 
-_clone_repo_or_update url dir:
+_clone_repo_or_update url dir PATH_URL="":
     #!/usr/bin/env sh
     if [ -d "{{dir}}" ]; then
         echo "Repository {{url}} already exists - updating..."
@@ -37,7 +37,20 @@ _clone_repo_or_update url dir:
         git clone "{{url}}" "{{dir}}"
     fi
 
-_build_lib REPO DEST BUILD_DIR CFLAGS="" LDFLAGS="":
+    if [ -n "{{PATH_URL}}" ]; then
+        echo "Downloading and applying patch from {{PATH_URL}}..."
+        cd "{{dir}}"
+
+        PATCH_FILE="$(mktemp /tmp/patch.XXXXXX.patch)"
+        curl -L -o "$PATCH_FILE" "{{PATH_URL}}"
+
+        git apply --reject --whitespace=fix "$PATCH_FILE"
+        rm "$PATCH_FILE"
+
+        echo "Patch applied successfully."
+    fi
+
+_build_lib REPO DEST BUILD_DIR CFLAGS="" LDFLAGS="" PATH_URL="":
     #!/usr/bin/env sh
     export API={{ANDROID_API}}
     export ARCH=arm
@@ -51,7 +64,7 @@ _build_lib REPO DEST BUILD_DIR CFLAGS="" LDFLAGS="":
     export LD=$TOOLCHAIN/bin/ld
     export STRIP=$TOOLCHAIN/bin/llvm-strip
 
-    just _clone_repo_or_update {{REPO}} "{{DEST}}"
+    just _clone_repo_or_update {{REPO}} "{{DEST}}" "{{PATH_URL}}"
     cd "{{DEST}}"
     autoreconf -fi
     CFLAGS="{{CFLAGS}}" LDFLAGS="{{LDFLAGS}}" \
@@ -59,26 +72,34 @@ _build_lib REPO DEST BUILD_DIR CFLAGS="" LDFLAGS="":
     make -j"$(nproc)"
     make install
 
+
+_build_libnfnetlink:
+    #!/usr/bin/env sh
+    just _build_lib \
+        https://git.netfilter.org/libnfnetlink \
+        "{{TARGET}}/libnfnetlink" \
+        "{{TARGET}}/libnfnetlink/build"
+
 _build_libmnl:
     #!/usr/bin/env sh
-    export LIBMNL_BUILD="{{TARGET}}/libmnl/build"
     just _build_lib \
         https://git.netfilter.org/libmnl \
         "{{TARGET}}/libmnl" \
-        "$LIBMNL_BUILD"
+        "{{TARGET}}/libmnl/build"
 
-_build_libnetfilter_queue:
+_build_libnetfilter_queue: _build_libmnl _build_libnfnetlink
     #!/usr/bin/env sh
     export LIBMNL_BUILD="{{TARGET}}/libmnl/build"
-    export LIBNETFILTER_QUEUE_BUILD="{{TARGET}}/libnetfilter_queue/build"
+    export LIBNFNETLINK_BUILD="{{TARGET}}/libnfnetlink/build"
     just _build_lib \
         https://git.netfilter.org/libnetfilter_queue \
         "{{TARGET}}/libnetfilter_queue" \
-        "$LIBNETFILTER_QUEUE_BUILD" \
-        "-I$LIBMNL_BUILD/include" \
-        "-L$LIBMNL_BUILD/lib"
+        "{{TARGET}}/libnetfilter_queue/build" \
+        "-I$LIBMNL_BUILD/include -I$LIBNFNETLINK_BUILD/include" \
+        "-L$LIBMNL_BUILD/lib -L$LIBNFNETLINK_BUILD/lib" \
+        "https://raw.githubusercontent.com/bol-van/zapret/refs/heads/master/.github/workflows/libnetfilter_queue-android.patch"
 
-_build_zapret_libraries: _download_android_ndk _build_libmnl _build_libnetfilter_queue
+_build_zapret_libraries: _download_android_ndk _build_libnetfilter_queue
 
 prepare-android: _build_zapret_libraries
     #!/usr/bin/env sh
