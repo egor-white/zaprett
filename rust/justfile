@@ -1,5 +1,10 @@
-ANDROID_NDK_VERSION := "r27d-linux"
+set shell := ["sh", "-eu", "-c"]
+
+export ANDROID_API := "21"
+export ANDROID_NDK_VERSION := "r27d-linux"
+
 TARGET := `pwd` + "/target"
+
 export NDK_HOME := TARGET + "/android-ndk-" + ANDROID_NDK_VERSION
 
 _download_android_ndk:
@@ -32,9 +37,50 @@ _clone_repo_or_update url dir:
         git clone "{{url}}" "{{dir}}"
     fi
 
-_prepare_android_ndk: _download_android_ndk
+_build_lib REPO DEST BUILD_DIR CFLAGS="" LDFLAGS="":
+    #!/usr/bin/env sh
+    export API={{ANDROID_API}}
+    export ARCH=arm
+    export TARGET=armv7a-linux-androideabi
+    export TOOLCHAIN={{NDK_HOME}}/toolchains/llvm/prebuilt/linux-x86_64
 
-prepare-android: _prepare_android_ndk
+    export AR=$TOOLCHAIN/bin/llvm-ar
+    export AS=$TOOLCHAIN/bin/llvm-as
+    export CC=$TOOLCHAIN/bin/$TARGET$API-clang
+    export CXX=$TOOLCHAIN/bin/$TARGET$API-clang++
+    export LD=$TOOLCHAIN/bin/ld
+    export STRIP=$TOOLCHAIN/bin/llvm-strip
+
+    just _clone_repo_or_update {{REPO}} "{{DEST}}"
+    cd "{{DEST}}"
+    autoreconf -fi
+    CFLAGS="{{CFLAGS}}" LDFLAGS="{{LDFLAGS}}" \
+        ./configure --host=arm-linux-androideabi --prefix="{{BUILD_DIR}}"
+    make -j"$(nproc)"
+    make install
+
+_build_libmnl:
+    #!/usr/bin/env sh
+    export LIBMNL_BUILD="{{TARGET}}/libmnl/build"
+    just _build_lib \
+        https://git.netfilter.org/libmnl \
+        "{{TARGET}}/libmnl" \
+        "$LIBMNL_BUILD"
+
+_build_libnetfilter_queue:
+    #!/usr/bin/env sh
+    export LIBMNL_BUILD="{{TARGET}}/libmnl/build"
+    export LIBNETFILTER_QUEUE_BUILD="{{TARGET}}/libnetfilter_queue/build"
+    just _build_lib \
+        https://git.netfilter.org/libnetfilter_queue \
+        "{{TARGET}}/libnetfilter_queue" \
+        "$LIBNETFILTER_QUEUE_BUILD" \
+        "-I$LIBMNL_BUILD/include" \
+        "-L$LIBMNL_BUILD/lib"
+
+_build_zapret_libraries: _download_android_ndk _build_libmnl _build_libnetfilter_queue
+
+prepare-android: _build_zapret_libraries
     #!/usr/bin/env sh
     cargo install cargo-ndk
 
