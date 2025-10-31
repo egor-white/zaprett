@@ -354,51 +354,53 @@ fn merge_files(
 }
 
 fn setup_iptables_rules() {
-    let ipt = iptables::new(false).unwrap();
-
-    ipt.insert(
-        "mangle",
-        "POSTROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-        1,
-    )
-    .unwrap();
-    ipt.insert(
-        "mangle",
-        "PREROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-        1,
-    )
-    .unwrap();
-    ipt.append(
-        "filter",
-        "FORWARD",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )
-    .unwrap();
+    todo!();
+    // let ipt = iptables::new(false).unwrap();
+    //
+    // ipt.insert(
+    //     "mangle",
+    //     "POSTROUTING",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    //     1,
+    // )
+    // .unwrap();
+    // ipt.insert(
+    //     "mangle",
+    //     "PREROUTING",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    //     1,
+    // )
+    // .unwrap();
+    // ipt.append(
+    //     "filter",
+    //     "FORWARD",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    // )
+    // .unwrap();
 }
 
 fn clear_iptables_rules() {
-    let ipt = iptables::new(false).unwrap();
-
-    ipt.delete(
-        "mangle",
-        "POSTROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )
-    .unwrap();
-    ipt.delete(
-        "mangle",
-        "PREROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )
-    .unwrap();
-    ipt.delete(
-        "filter",
-        "FORWARD",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )
-    .unwrap();
+    todo!();
+    // let ipt = iptables::new(false).unwrap();
+    //
+    // ipt.delete(
+    //     "mangle",
+    //     "POSTROUTING",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    // )
+    // .unwrap();
+    // ipt.delete(
+    //     "mangle",
+    //     "PREROUTING",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    // )
+    // .unwrap();
+    // ipt.delete(
+    //     "filter",
+    //     "FORWARD",
+    //     "-j NFQUEUE --queue-num 200 --queue-bypass",
+    // )
+    // .unwrap();
 }
 
 async fn run_nfqws(args_str: &String) -> anyhow::Result<()> {

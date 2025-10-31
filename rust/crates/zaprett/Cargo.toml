@@ -7,7 +7,6 @@ repository.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-iptables = { path = "../iptables" }
 libc = { workspace = true }
 regex = { workspace = true }
 rust-ini = { workspace = true }
