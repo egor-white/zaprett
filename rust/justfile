@@ -5,7 +5,7 @@ export ANDROID_NDK_VERSION := "r27d-linux"
 
 TARGET := `pwd` + "/target"
 
-export NETFILTER_LIBS := TARGET + "/netfilter_libs"
+export NETFILTER_LIBS := TARGET + "/netfilter"
 
 export NDK_HOME := TARGET + "/android-ndk-" + ANDROID_NDK_VERSION
 
@@ -30,43 +30,51 @@ _download_android_ndk:
         echo "Android ndk {{ANDROID_NDK_VERSION}} already installed in {{NDK_HOME}}"
     fi
 
-_build_netfilter_libs:
+_build_netfilter_libs abi target_arch:
     #!/usr/bin/env sh
 
-    if [ ! -d "{{NETFILTER_LIBS}}" ]; then
+    if [ ! -d "{{NETFILTER_LIBS}}-{{target_arch}}" ]; then
         export PATCH="$(pwd)/libnetfilter_queue-android.patch"
         cd "{{TARGET}}"
 
-        export TARGET=arm-linux-androideabi
         export TOOLCHAIN=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
-        export CC="$TOOLCHAIN/bin/clang --target=$TARGET$ANDROID_API"
+        export CC="$TOOLCHAIN/bin/clang --target={{target_arch}}$ANDROID_API"
         export AR=$TOOLCHAIN/bin/llvm-ar
         export AS=$CC
+        export ABI={{abi}}
         export LD=$TOOLCHAIN/bin/ld
         export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
         export STRIP=$TOOLCHAIN/bin/llvm-strip
-        export PKG_CONFIG_PATH=$NETFILTER_LIBS/lib/pkgconfig
+        export PKG_CONFIG_PATH=$NETFILTER_LIBS-{{target_arch}}/lib/pkgconfig
 
-        wget -O- https://www.netfilter.org/pub/libnfnetlink/libnfnetlink-1.0.2.tar.bz2 | tar -xj
-        wget -O- https://www.netfilter.org/pub/libmnl/libmnl-1.0.5.tar.bz2 | tar -xj
-        wget -O- https://www.netfilter.org/pub/libnetfilter_queue/libnetfilter_queue-1.0.5.tar.bz2 | tar -xj
-        patch -p1 -d libnetfilter_queue-* -i $PATCH
+        if [ ! -d "libnfnetlink-1.0.2" ]; then
+            wget -O- https://www.netfilter.org/pub/libnfnetlink/libnfnetlink-1.0.2.tar.bz2 | tar -xj
+        fi
+
+        if [ ! -d "libmnl-1.0.5" ]; then
+            wget -O- https://www.netfilter.org/pub/libmnl/libmnl-1.0.5.tar.bz2 | tar -xj
+        fi
+
+        if [ ! -d "libnetfilter_queue-1.0.5" ]; then
+            wget -O- https://www.netfilter.org/pub/libnetfilter_queue/libnetfilter_queue-1.0.5.tar.bz2 | tar -xj
+            patch -p1 -d libnetfilter_queue-* -i $PATCH
+        fi
 
         for i in libmnl libnfnetlink libnetfilter_queue ; do
         (
             cd $i-*
             CFLAGS="-Os -flto=auto -Wno-implicit-function-declaration" \
-            ./configure --prefix= --host=$TARGET --enable-static --disable-shared --disable-dependency-tracking
+            ./configure --prefix= --host={{target_arch}} --enable-static --disable-shared --disable-dependency-tracking
             make -j$(nproc)
-            make install DESTDIR=$NETFILTER_LIBS
+            make install DESTDIR=$NETFILTER_LIBS-{{target_arch}}
         )
-            sed -i "s|^prefix=.*|prefix=$NETFILTER_LIBS|g" $NETFILTER_LIBS/lib/pkgconfig/$i.pc
+            sed -i "s|^prefix=.*|prefix=$NETFILTER_LIBS-{{target_arch}}|g" $NETFILTER_LIBS-{{target_arch}}/lib/pkgconfig/$i.pc
         done
     else
-        echo "netfilter libs already built"
+        echo "netfilter libs for {{target_arch}} already built"
     fi
 
-prepare-android: _download_android_ndk _build_netfilter_libs
+prepare-android: _download_android_ndk
     #!/usr/bin/env sh
     cargo install cargo-ndk
 
@@ -82,7 +90,20 @@ prepare-android: _download_android_ndk _build_netfilter_libs
 
 build-android *args: prepare-android
     #!/usr/bin/env sh
-    export CFLAGS="-I $NETFILTER_LIBS/include"
-    export LDFLAGS="-L $NETFILTER_LIBS/lib"
-    export CXXFLAGS="$CFLAGS"
-    cargo ndk -t armv7-linux-androideabi -t aarch64-linux-android -t x86\_64-linux-android --platform $ANDROID_API build {{args}}
+
+    targets=("armv7-linux-androideabi")
+    abis=("armeabi-v7a")
+
+    for i in "${!targets[@]}"; do
+        t=${targets[$i]}
+        a=${abis[$i]}
+        (
+            echo "Building target=$t, abi=$a"
+            export CFLAGS="-I$NETFILTER_LIBS-$t/include"
+            export LDFLAGS="-L$NETFILTER_LIBS-$t/lib"
+            export CXXFLAGS="$CFLAGS"
+
+            just _build_netfilter_libs $a $t
+            NETFILTER_LIBS=$NETFILTER_LIBS-$t cargo ndk -t $t --platform $ANDROID_API build {{args}}
+        )
+    done
