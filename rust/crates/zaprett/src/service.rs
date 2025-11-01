@@ -8,7 +8,9 @@ use nix::sys::signal::{Signal, kill};
 use nix::unistd::{Pid, Uid};
 use regex::Regex;
 use std::borrow::Cow;
+use std::path::Path;
 use sysctl::Sysctl;
+use sysinfo::{Pid as SysPid, System};
 use tokio::fs;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
@@ -82,16 +84,33 @@ pub async fn stop_service() -> anyhow::Result<()> {
 }
 
 pub async fn restart_service() -> anyhow::Result<()> {
+    if !Uid::effective().is_root() {
+        bail!("Running not from root, exiting");
+    };
     stop_service().await?;
     start_service().await?;
     info!("zaprett service restarted!");
     Ok(())
 }
 
-pub async fn service_status() -> bool {
-    fs::read_to_string(MODULE_PATH.join("tmp/pid.lock"))
-        .await
-        .ok()
-        .and_then(|pid_str| pid_str.trim().parse::<i32>().ok())
-        .is_some()
+pub async fn service_status() -> anyhow::Result<bool> {
+    if !Uid::effective().is_root() {
+        bail!("Running not from root, exiting");
+    };
+
+    let pid_i32 = match fs::read_to_string(Path::new(*MODULE_PATH).join("tmp/pid.lock")).await {
+        Ok(s) => match s.trim().parse::<i32>() {
+            Ok(pid) => pid,
+            Err(_) => return Ok(false),
+        },
+        Err(_) => return Ok(false),
+    };
+    let pid = SysPid::from(pid_i32 as usize);
+    let system = System::new_all();
+    if let Some(process) = system.process(pid) {
+        if process.name() == "zaprett" {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }

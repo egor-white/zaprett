@@ -1,7 +1,7 @@
+use crate::service::{restart_service, service_status, start_service, stop_service};
 use crate::{bin_version, get_autostart, module_version, set_autostart};
 use clap::Subcommand;
 use log::error;
-use crate::service::{restart_service, service_status, start_service, stop_service};
 
 #[derive(Subcommand)]
 pub enum Command {
@@ -40,23 +40,23 @@ impl Command {
             Command::Start => return start_service().await,
             Command::Stop => {
                 let _ = stop_service().await;
-            },
+            }
             Command::Restart => return restart_service().await,
             Command::Status => {
                 println!(
                     "zaprett is {}",
-                    if service_status().await {
+                    if service_status().await? {
                         "working"
                     } else {
                         "stopped"
                     }
                 );
-            },
+            }
             Command::SetAutostart { autostart } => {
                 if let Err(err) = set_autostart(autostart).await {
                     error!("Failed to set auto start: {err}")
                 }
-            },
+            }
             Command::GetAutostart => get_autostart(),
             Command::ModuleVersion => module_version(),
             Command::BinaryVersion => bin_version(),

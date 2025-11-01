@@ -1,20 +1,20 @@
 pub mod cli;
 pub mod config;
+mod daemon;
 pub mod iptables_rust;
 mod service;
-mod daemon;
 
+use anyhow::bail;
+use ini::Ini;
+use libnfqws::nfqws_main;
 use std::error;
 use std::ffi::CString;
 use std::os::raw::c_char;
 use std::path::Path;
 use std::sync::LazyLock;
-use anyhow::bail;
-use ini::Ini;
-use tokio::{fs, task};
 use tokio::fs::File;
-use tokio::io::{copy, AsyncWriteExt};
-use libnfqws::nfqws_main;
+use tokio::io::{AsyncWriteExt, copy};
+use tokio::{fs, task};
 
 pub static MODULE_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("/data/adb/modules/zaprett"));
 pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
@@ -72,15 +72,13 @@ pub async fn merge_files(
             .await
             .map_err(|e| format!("Failed to open {}: {}", input_path.display(), e))?;
 
-        copy(&mut input_file, &mut output_file)
-            .await
-            .map_err(|e| {
-                format!(
-                    "Failed to write contents of {}: {}",
-                    input_path.display(),
-                    e
-                )
-            })?;
+        copy(&mut input_file, &mut output_file).await.map_err(|e| {
+            format!(
+                "Failed to write contents of {}: {}",
+                input_path.display(),
+                e
+            )
+        })?;
     }
 
     output_file.flush().await?;
@@ -88,7 +86,7 @@ pub async fn merge_files(
 }
 
 async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
-    if service::service_status().await {
+    if service::service_status().await? {
         bail!("nfqws already started!");
     }
 
@@ -112,7 +110,7 @@ async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
             nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
         }
     })
-        .await?;
+    .await?;
 
     Ok(())
 }
