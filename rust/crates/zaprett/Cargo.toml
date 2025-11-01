@@ -20,3 +20,4 @@ pretty_env_logger = { workspace = true }
 log = { workspace = true }
 nix = { workspace = true, features = ["user"] }
 iptables = { workspace = true }
+getset = { workspace = true }
