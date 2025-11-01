@@ -136,10 +136,12 @@ jobs:
 
       - name: Upload artifact
         if: ${{ inputs.create_release != 'true' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5.0.0
         with:
-          name: my-artifact
+          name: zaprett
           path: out/*
+
+      
 
       - name: Update changelog
         if: ${{ inputs.create_release == 'true' }}
