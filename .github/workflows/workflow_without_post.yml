@@ -52,7 +52,7 @@ jobs:
           cp rust/target/aarch64-linux-android/release/zaprett zaprett/system/bin/zaprett-aarch64
           cp rust/target/x86_64-linux-android/release/zaprett zaprett/system/bin/zaprett-x86_64
 
-          cp -a src-module/* zaprett/
+          cp -a src/* zaprett/
 
           #copy all files to another distributions
           cp -r zaprett/* zaprett-hosts/
