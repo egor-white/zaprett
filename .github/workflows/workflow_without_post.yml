@@ -3,8 +3,16 @@ name: Build module
 on:
   workflow_dispatch:
     inputs:
+      create_release:
+        description: 'Create GitHub release?'
+        required: false
+        default: 'false'
       tag:
         description: "Tag for the release (x.x.x)"
+        required: true
+        type: string
+      zapret-version:
+        description: "Zapret version (x.x)"
         required: true
         type: string
       version:
@@ -27,6 +35,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ZAPRET_VERSION: ${{ inputs.zapret_version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,9 +48,6 @@ jobs:
 
       - name: Build zaprett
         run: just -f rust/justfile build-android --release
-
-      - name: Tree
-        run: tree rust
 
       - name: Make build dirs
         run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett-tv/system/bin zaprett/system/etc/zaprett/lists zapret-latest out lists zapret-hosts/system/etc/zaprett/lists zapret-tv/system/etc/zaprett/lists
@@ -115,8 +122,9 @@ jobs:
           mv zaprett.zip out/
           mv zaprett-hosts.zip out/
           mv zaprett-tv.zip out/
-
+        
       - name: Create release
+        if: ${{ inputs.create_release == 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
@@ -125,10 +133,20 @@ jobs:
           files: out/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact
+        if: ${{ inputs.create_release != 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: out/*
+
       - name: Update changelog
-        run: echo "${{ inputs.release_changes}}" > changelog.md
+        if: ${{ inputs.create_release == 'true' }}
+        run: echo "${{ inputs.release_changes }}" > changelog.md
 
       - name: Update update.json
+        if: ${{ inputs.create_release == 'true' }}
         run: |
           cat > update.json <<EOF
           {
@@ -154,8 +172,11 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
+
       - name: Commit jsons and changelog
+        if: ${{ inputs.create_release == 'true' }}
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update update's.json and changelog"
           file_pattern: "update.json update_hosts.json update_tv.json changelog.md"
+
