@@ -1,4 +1,4 @@
-set shell := ["sh", "-eu", "-c"]
+set shell := ["bash", "-eu", "-c"]
 
 export ANDROID_API := "21"
 export ANDROID_NDK_VERSION := "r27d-linux"
@@ -10,7 +10,7 @@ export NETFILTER_LIBS := TARGET + "/netfilter"
 export NDK_HOME := TARGET + "/android-ndk-" + ANDROID_NDK_VERSION
 
 _download_android_ndk:
-    #!/usr/bin/env sh
+    #!/usr/bin/env bash
     if [ ! -d "{{NDK_HOME}}" ]; then
         echo "Downloading ndk {{ANDROID_NDK_VERSION}} to {{NDK_HOME}}"
         TMPFILE="{{NDK_HOME}}.tmp"
@@ -33,7 +33,7 @@ _download_android_ndk:
     fi
 
 _build_netfilter_libs target_arch:
-    #!/usr/bin/env sh
+    #!/usr/bin/env bash
 
     if [ ! -d "{{NETFILTER_LIBS}}-{{target_arch}}" ]; then
         export PATCH="$(pwd)/libnetfilter_queue-android.patch"
@@ -77,7 +77,7 @@ _build_netfilter_libs target_arch:
     fi
 
 _instal_rust_target target:
-    #!/usr/bin/env sh
+    #!/usr/bin/env bash
     if ! rustup target list --installed | grep -q "{{target}}"; then
         echo "Installing missing target: {{target}}"
         rustup target add "{{target}}"
@@ -86,11 +86,11 @@ _instal_rust_target target:
     fi
 
 prepare-android: _download_android_ndk
-    #!/usr/bin/env sh
+    #!/usr/bin/env bash
     cargo install cargo-ndk
 
 build-android *args: prepare-android
-    #!/usr/bin/env sh
+    #!/usr/bin/env bash
 
     targets=("armv7-linux-androideabi" "aarch64-linux-android" "x86_64-linux-android")
 
