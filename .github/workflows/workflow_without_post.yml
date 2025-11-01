@@ -36,7 +36,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ZAPRET_VERSION: ${{ inputs.zapret_version }}
+      ZAPRET_VERSION: ${{ inputs.zapret-version }}
     steps:
       - uses: actions/checkout@v4
 
