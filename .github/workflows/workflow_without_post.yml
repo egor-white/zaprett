@@ -34,7 +34,7 @@ jobs:
         run: git submodule update --init --recursive
         
       - name: Install dependencies
-        run: sudo apt install build-essential pkg-config just
+        run: sudo apt install build-essential pkg-config just unzip
 
       - name: Build zaprett
         run: just -f rust/justfile build-android --release
