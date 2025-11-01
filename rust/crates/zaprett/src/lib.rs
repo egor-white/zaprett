@@ -90,7 +90,11 @@ async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
         bail!("nfqws already started!");
     }
 
-    let mut args = vec!["nfqws".to_string()];
+    let mut args = vec![
+        "nfqws".to_string(),
+        "--uid=0:0".to_string(),
+        "--qnum=200".to_string(),
+    ];
 
     if args_str.trim().is_empty() {
         args.push("-v".to_string());
