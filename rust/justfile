@@ -16,6 +16,8 @@ _download_android_ndk:
         TMPFILE="{{NDK_HOME}}.tmp"
         TMPDIR="{{NDK_HOME}}.extracted.tmp"
 
+        mkdir -p "$(dirname "$TMPFILE")"
+
         curl -L -C - -o "$TMPFILE" "https://dl.google.com/android/repository/android-ndk-{{ANDROID_NDK_VERSION}}.zip"
 
         unzip "$TMPFILE" -d "$TMPDIR"
