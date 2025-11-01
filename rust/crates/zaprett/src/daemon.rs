@@ -1,13 +1,13 @@
-use log::{error, info};
+use crate::{MODULE_PATH, run_nfqws};
 use daemonize::Daemonize;
-use crate::{run_nfqws, MODULE_PATH};
+use log::{error, info};
 
 pub async fn daemonize_nfqws(args: &str) {
     info!("Starting nfqws as a daemon");
     let daemonize = Daemonize::new()
         .pid_file(MODULE_PATH.join("tmp/pid.lock").as_path())
         .working_directory("/tmp")
-        .group("daemon")
+        // .group("daemon")
         .privileged_action(|| "Executed before drop privileges");
 
     match daemonize.start() {
