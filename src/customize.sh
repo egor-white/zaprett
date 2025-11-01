@@ -33,30 +33,21 @@ ui_print "Copying files to /bin"
 arch=$(uname -m)
 case "$arch" in
     "x86_64")
-        nfqws="nfqws_x86_64"
-        ;;
-    "i386"|"i686")
-        nfqws="nfqws_x86"
+        zaprett_bin="zaprett-x86_64"
         ;;
     "armv7l"|"arm")
-        nfqws="nfqws_arm32"
+        zaprett_bin="zaprett-armv7"
         ;;
     "aarch64"|"armv8l")
-        nfqws="nfqws_arm64"
-        ;;
-    "mips")
-        nfqws="nfqws_mips"
-        ;;
-    "mipsel")
-        nfqws="nfqws_mipsel"
+        zaprett_bin="zaprett-aarch64"
         ;;
     *)
         ui_print "Unknown arch: $arch"
         abort
         ;;
 esac
-mv $MODPATH/system/bin/$nfqws $MODPATH/system/bin/nfqws
-rm $MODPATH/system/bin/nfqws_*
+mv $MODPATH/system/bin/$zaprett_bin $MODPATH/system/bin/zaprett
+rm $MODPATH/system/bin/zaprett-*
 mkdir $MODPATH/tmp
 
 ui_print "Setting permissions..."
