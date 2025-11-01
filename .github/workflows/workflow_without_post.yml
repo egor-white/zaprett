@@ -48,13 +48,9 @@ jobs:
       - name: Copy files to dirs
         run: |
           #copy nfqws and zaprett
-          cp
-          cp zapret-latest/binaries/android-arm/nfqws zaprett/system/bin/nfqws_arm32
-          cp zapret-latest/binaries/android-arm64/nfqws zaprett/system/bin/nfqws_arm64
-          cp zapret-latest/binaries/android-x86/nfqws zaprett/system/bin/nfqws_x86
-          cp zapret-latest/binaries/android-x86_64/nfqws zaprett/system/bin/nfqws_x86_64
-          cp zapret-latest/binaries/linux-mips/nfqws zaprett/system/bin/nfqws_mips
-          cp zapret-latest/binaries/linux-mipsel/nfqws zaprett/system/bin/nfqws_mipsel
+          cp rust/target/armv7-linux-androideabi/zaprett zaprett/system/bin/zaprett-armv7
+          cp rust/target/aarch64-linux-android/zaprett zaprett/system/bin/zaprett-aarch64
+          cp rust/target/x86_64-linux-android/zaprett zaprett/system/bin/zaprett-x86_64
 
           cp -a src-module/* zaprett/
 
