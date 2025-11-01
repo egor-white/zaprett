@@ -1,24 +1,24 @@
-use std::borrow::Cow;
-use nix::unistd::{Pid, Uid};
-use anyhow::bail;
-use tokio::fs;
-use nix::sys::signal::{kill, Signal};
-use log::info;
-use tokio::fs::File;
-use regex::Regex;
-use tokio::io::AsyncReadExt;
-use sysctl::Sysctl;
-use crate::iptables_rust::{clear_iptables_rules, setup_iptables_rules};
-use crate::{DEFAULT_START, MODULE_PATH, ZAPRETT_DIR_PATH};
 use crate::config::Config;
 use crate::daemon::daemonize_nfqws;
+use crate::iptables_rust::{clear_iptables_rules, setup_iptables_rules};
+use crate::{DEFAULT_START, MODULE_PATH, ZAPRETT_DIR_PATH};
+use anyhow::bail;
+use log::info;
+use nix::sys::signal::{Signal, kill};
+use nix::unistd::{Pid, Uid};
+use regex::Regex;
+use std::borrow::Cow;
+use sysctl::Sysctl;
+use tokio::fs;
+use tokio::fs::File;
+use tokio::io::AsyncReadExt;
 
 pub async fn start_service() -> anyhow::Result<()> {
     if !Uid::effective().is_root() {
         bail!("Running not from root, exiting");
     };
 
-    info!("Starting zaprett service...");
+    println!("Starting zaprett service...");
 
     let tmp_dir = MODULE_PATH.join("/tmp");
     if tmp_dir.exists() {
@@ -30,7 +30,8 @@ pub async fn start_service() -> anyhow::Result<()> {
     File::open(ZAPRETT_DIR_PATH.join("config.json"))
         .await
         .expect("cannot open config.json")
-        .read_to_string(&mut config_contents).await?;
+        .read_to_string(&mut config_contents)
+        .await?;
 
     let config: Config = serde_json::from_str(&config_contents).expect("invalid json");
 
@@ -61,7 +62,7 @@ pub async fn start_service() -> anyhow::Result<()> {
     setup_iptables_rules().expect("setup iptables rules");
 
     daemonize_nfqws(&strat_modified).await;
-    info!("zaprett service started!");
+    println!("zaprett service started!");
     Ok(())
 }
 

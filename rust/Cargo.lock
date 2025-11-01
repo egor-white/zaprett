@@ -330,6 +330,14 @@ checksum = "135b12329e5e3ce057a9f972339ea52bc954fe1e9358ef27f95e89716fbc5424"
 [[package]]
 name = "iptables"
 version = "0.6.0"
+dependencies = [
+ "lazy_static",
+ "regex",
+]
+
+[[package]]
+name = "iptables"
+version = "0.6.0"
 source = "git+https://github.com/sqlerrorthing/rust-iptables.git?branch=feat%2Fadd-android#c56ec40f30d61becc66024061d2461851acf5d19"
 dependencies = [
  "lazy_static",
@@ -951,7 +959,7 @@ dependencies = [
  "clap",
  "daemonize",
  "getset",
- "iptables",
+ "iptables 0.6.0 (git+https://github.com/sqlerrorthing/rust-iptables.git?branch=feat%2Fadd-android)",
  "libc",
  "libnfqws",
  "log",
