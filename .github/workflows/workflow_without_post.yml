@@ -1,4 +1,4 @@
-name: Build module (Without telegram post)
+name: Build module
 
 on:
   workflow_dispatch:
@@ -30,30 +30,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Git submodules
+        run: git submodule update --init --recursive
+        
+      - name: Install dependencies
+        run: sudo apt install build-essential pkg-config just
+
+      - name: Build zaprett
+        run: just -f rust/justfile build-android --release
+
+      - name: Tree
+        run: tree rust
+
       - name: Make build dirs
         run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett-tv/system/bin zaprett/system/etc/zaprett/lists zapret-latest out lists zapret-hosts/system/etc/zaprett/lists zapret-tv/system/etc/zaprett/lists
-
-      - name: Download latest zapret binaries
-        run: |
-          LATEST_RELEASE=$(curl -s https://api.github.com/repos/bol-van/zapret/releases/latest)
-          DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | grep -o 'browser_download_url.*zapret-v.*\.zip"' | cut -d'"' -f3)
-          wget $DOWNLOAD_URL -O zapret-latest.zip
-
-      - name: Unzip zapret binaries
-        run: |
-          unzip -o zapret-latest.zip
-          ZAPRET_DIR=$(find . -maxdepth 1 -type d -name 'zapret-v*' | head -n 1)
-          if [ "$(ls -A "$ZAPRET_DIR")" ]; then
-            mv "$ZAPRET_DIR"/* zapret-latest/
-          else
-           echo "Warning: $ZAPRET_DIR is empty"
-          fi
-          rm -rf "${ZAPRET_DIR}"
-          rm zapret-latest.zip
 
       - name: Copy files to dirs
         run: |
           #copy nfqws and zaprett
+          cp
           cp zapret-latest/binaries/android-arm/nfqws zaprett/system/bin/nfqws_arm32
           cp zapret-latest/binaries/android-arm64/nfqws zaprett/system/bin/nfqws_arm64
           cp zapret-latest/binaries/android-x86/nfqws zaprett/system/bin/nfqws_x86
