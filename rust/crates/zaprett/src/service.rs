@@ -20,7 +20,7 @@ pub async fn start_service() -> anyhow::Result<()> {
 
     println!("Starting zaprett service...");
 
-    let tmp_dir = MODULE_PATH.join("/tmp");
+    let tmp_dir = MODULE_PATH.join("tmp");
     if tmp_dir.exists() {
         fs::remove_dir_all(&tmp_dir).await?;
         fs::create_dir_all(&tmp_dir).await?;
