@@ -1,6 +1,7 @@
-use crate::{bin_version, get_autostart, module_version, restart_service, service_status, set_autostart, start_service, stop_service};
+use crate::{bin_version, get_autostart, module_version, set_autostart};
 use clap::Subcommand;
 use log::error;
+use crate::service::{restart_service, service_status, start_service, stop_service};
 
 #[derive(Subcommand)]
 pub enum Command {

@@ -30,18 +30,20 @@ impl ListType {
     pub async fn merge(&self, config: &Config) -> (String, String) {
         let module_path_str = MODULE_PATH.to_str().unwrap();
 
-        let (host_files, ipset_files, host_suffix, ipset_suffix) = match self {
+        let (host_files, ipset_files, host_suffix, ipset_suffix, exclude_flag) = match self {
             ListType::Whitelist => (
                 &config.active_lists,
                 &config.active_ipsets,
                 "hostlist",
                 "ipset",
+                ""
             ),
             ListType::Blacklist => (
                 &config.active_exclude_lists,
                 &config.active_exclude_ipsets,
                 "hostlist-exclude",
                 "ipset-exclude",
+                "-exclude"
             ),
         };
 
@@ -50,16 +52,10 @@ impl ListType {
 
         merge_files(host_files, host_path).await.unwrap();
         merge_files(ipset_files, ipset_path).await.unwrap();
-
-        let exclude = if matches!(self, ListType::Blacklist) {
-            "-exclude"
-        } else {
-            ""
-        };
-
+        
         (
-            format!("--hostlist{exclude}={module_path_str}/tmp/{host_suffix}"),
-            format!("--ipset{exclude}={module_path_str}/tmp/{ipset_suffix}"),
+            format!("--hostlist{exclude_flag}={module_path_str}/tmp/{host_suffix}"),
+            format!("--ipset{exclude_flag}={module_path_str}/tmp/{ipset_suffix}"),
         )
     }
 }

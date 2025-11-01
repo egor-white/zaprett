@@ -1,7 +1,8 @@
+pub mod commands;
+
 use clap::Parser;
 use getset::Getters;
-use serde::{Deserialize, Serialize};
-use crate::commands::Command;
+use commands::Command;
 
 #[derive(Parser, Getters)]
 #[command(version)]
