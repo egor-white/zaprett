@@ -11,7 +11,7 @@ pub async fn daemonize_nfqws(args: &str) {
 
     let daemonize = Daemonize::new()
         .pid_file(MODULE_PATH.join("tmp/pid.lock").as_path())
-        .working_directory("/tmp")
+        .working_directory(MODULE_PATH.join("tmp"))
         // .group("daemon")
         .stdout(stdout)
         .stderr(stderr)
