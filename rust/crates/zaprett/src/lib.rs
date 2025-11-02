@@ -3,6 +3,7 @@ pub mod config;
 mod daemon;
 pub mod iptables_rust;
 mod service;
+mod autostart;
 
 use ini::Ini;
 use libnfqws::nfqws_main;
@@ -11,9 +12,8 @@ use std::ffi::CString;
 use std::os::raw::c_char;
 use std::path::Path;
 use std::sync::LazyLock;
-use tokio::fs;
 use tokio::fs::File;
-use tokio::io::{AsyncWriteExt, copy};
+use tokio::io::{copy, AsyncWriteExt};
 
 pub static MODULE_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("/data/adb/modules/zaprett"));
 pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
@@ -27,23 +27,6 @@ pub static DEFAULT_START: &str = "
         --filter-udp=443 $hostlist --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new
         --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist
         ";
-
-async fn set_autostart(autostart: bool) -> Result<(), anyhow::Error> {
-    let autostart_path = MODULE_PATH.join("autostart");
-
-    if autostart {
-        File::create(autostart_path).await?;
-    } else {
-        fs::remove_file(autostart_path).await?;
-    }
-
-    Ok(())
-}
-
-fn get_autostart() {
-    let file = MODULE_PATH.join("autostart");
-    println!("{}", file.exists());
-}
 
 fn module_version() {
     if let Ok(prop) = Ini::load_from_file(MODULE_PATH.join("module.prop"))
