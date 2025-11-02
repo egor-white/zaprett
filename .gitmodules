@@ -1,0 +1,3 @@
+[submodule "rust/crates/libnfqws/zapret"]
+	path = rust/crates/libnfqws/zapret
+	url = https://github.com/bol-van/zapret.git

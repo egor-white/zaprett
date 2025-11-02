@@ -3,69 +3,64 @@ name: Build module
 on:
   workflow_dispatch:
     inputs:
+      create_release:
+        description: 'Create GitHub release?'
+        required: false
+        default: 'false'
       tag:
-        description: 'Tag for the release (x.x.x)'
+        description: "Tag for the release (x.x.x)"
+        required: true
+        type: string
+      zapret-version:
+        description: "Zapret version (x.x)"
         required: true
         type: string
       version:
-        description: 'Module version (x.x)'
+        description: "Module version (x.x)"
         required: true
         type: string
       version_code:
-        description: 'Module version code (xx)'
+        description: "Module version code (xx)"
         required: true
         type: string
       release_name:
-        description: 'Release Name'
+        description: "Release Name"
         required: true
         type: string
       release_changes:
-        description: 'Release Changes'
+        description: "Release Changes"
         required: true
         type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ZAPRET_VERSION: ${{ inputs.zapret-version }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Git submodules
+        run: git submodule update --init --recursive
+        
+      - name: Install dependencies
+        run: sudo apt install build-essential pkg-config just unzip
+
+      - name: Build zaprett
+        run: just -f rust/justfile build-android --release
+
       - name: Make build dirs
-        run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett-tv/system/bin zaprett/system/etc/zaprett/lists zapret-latest out lists zapret-hosts/system/etc/zaprett/lists zapret-tv/system/etc/zaprett/lists 
-
-      - name: Download latest zapret binaries
-        run: |
-          LATEST_RELEASE=$(curl -s https://api.github.com/repos/bol-van/zapret/releases/latest)
-          DOWNLOAD_URL=$(echo "$LATEST_RELEASE" | grep -o 'browser_download_url.*zapret-v.*\.zip"' | cut -d'"' -f3)
-          wget $DOWNLOAD_URL -O zapret-latest.zip
-
-      - name: Unzip zapret binaries
-        run: |
-          unzip -o zapret-latest.zip
-          ZAPRET_DIR=$(find . -maxdepth 1 -type d -name 'zapret-v*' | head -n 1)
-          if [ "$(ls -A "$ZAPRET_DIR")" ]; then
-            mv "$ZAPRET_DIR"/* zapret-latest/
-          else
-           echo "Warning: $ZAPRET_DIR is empty"
-          fi
-          rm -rf "${ZAPRET_DIR}"
-          rm zapret-latest.zip
+        run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett/system/etc/zaprett/lists out lists zapret-hosts/system/etc/zaprett/lists
 
       - name: Copy files to dirs
         run: |
-          #copy nfqws and zaprett
-          cp zapret-latest/binaries/android-arm/nfqws zaprett/system/bin/nfqws_arm32
-          cp zapret-latest/binaries/android-arm64/nfqws zaprett/system/bin/nfqws_arm64
-          cp zapret-latest/binaries/android-x86/nfqws zaprett/system/bin/nfqws_x86
-          cp zapret-latest/binaries/android-x86_64/nfqws zaprett/system/bin/nfqws_x86_64
-          cp zapret-latest/binaries/linux-mips/nfqws zaprett/system/bin/nfqws_mips
-          cp zapret-latest/binaries/linux-mipsel/nfqws zaprett/system/bin/nfqws_mipsel
+          cp rust/target/armv7-linux-androideabi/release/zaprett zaprett/system/bin/zaprett-armv7
+          cp rust/target/aarch64-linux-android/release/zaprett zaprett/system/bin/zaprett-aarch64
+          cp rust/target/x86_64-linux-android/release/zaprett zaprett/system/bin/zaprett-x86_64
 
           cp -a src/* zaprett/
-
-          #copy all files to another distributions
           cp -r zaprett/* zaprett-hosts/
-          cp -r zaprett/* zaprett-tv/
+    
       - name: Download and copy actual lists
         run: |
           wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-youtube.txt -O lists/list-youtube.txt
@@ -73,13 +68,12 @@ jobs:
 
           cp lists/list-youtube.txt zaprett/system/etc/zaprett/lists/
           cp lists/list-youtube.txt zaprett-hosts/system/etc/zaprett/lists/
-          cp lists/list-youtube.txt zaprett-tv/system/etc/zaprett/lists/
 
           cp lists/list-discord.txt zaprett/system/etc/zaprett/lists/
           cp lists/list-discord.txt zaprett-hosts/system/etc/zaprett/lists/
 
           cp hosts/hosts zaprett-hosts/system/etc
-      
+
       - name: Create module.prop
         run: |
           cat > zaprett/module.prop <<EOF
@@ -91,7 +85,7 @@ jobs:
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update.json
           EOF
-          
+
           cat > zaprett-hosts/module.prop <<EOF
           id=zaprett
           name=zaprett-hosts
@@ -101,17 +95,7 @@ jobs:
           description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-hosts.json
           EOF
-          
-          cat > zaprett-tv/module.prop <<EOF
-          id=zaprett
-          name=zaprett-tv
-          version=${{ inputs.version }}
-          versionCode=${{ inputs.version_code }}
-          author=egor-white, Cherret
-          description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
-          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-tv.json
-          EOF
-          
+
       - name: Tree files
         run: |
           tree zaprett/ zaprett-hosts/ zaprett-tv/
@@ -119,13 +103,12 @@ jobs:
         run: |
           cd zaprett && zip -r ../zaprett.zip ./* && cd ..
           cd zaprett-hosts && zip -r ../zaprett-hosts.zip ./* && cd ..
-          cd zaprett-tv && zip -r ../zaprett-tv.zip ./* && cd ..
 
           mv zaprett.zip out/
           mv zaprett-hosts.zip out/
-          mv zaprett-tv.zip out/
-      
+        
       - name: Create release
+        if: ${{ inputs.create_release == 'true' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
@@ -134,10 +117,22 @@ jobs:
           files: out/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact
+        if: ${{ inputs.create_release != 'true' }}
+        uses: actions/upload-artifact@v5.0.0
+        with:
+          name: zaprett
+          path: out/*
+
+      
+
       - name: Update changelog
-        run: echo "${{ inputs.release_changes}}" > changelog.md
-          
+        if: ${{ inputs.create_release == 'true' }}
+        run: echo "${{ inputs.release_changes }}" > changelog.md
+
       - name: Update update.json
+        if: ${{ inputs.create_release == 'true' }}
         run: |
           cat > update.json <<EOF
           {
@@ -155,6 +150,7 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
+<<<<<<< HEAD
           cat > update-tv.json <<EOF
           {
             "version": "${{ inputs.version }}",
@@ -163,12 +159,14 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
+=======
+>>>>>>> origin/rust
       - name: Commit jsons and changelog
+        if: ${{ inputs.create_release == 'true' }}
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update update's.json and changelog"
-          file_pattern: 'update.json update_hosts.json update_tv.json changelog.md'
-   
+          file_pattern: "update.json update_hosts.json changelog.md"
       - name: Send bot post
         env:
           MESSAGE_TEXT: |
@@ -185,4 +183,3 @@ jobs:
             -d parse_mode=HTML \
             -d disable_web_page_preview=true \
             --data-urlencode "text=$MESSAGE_TEXT"
-            

@@ -1,0 +1,24 @@
+[package]
+name = "zaprett"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+libc = { workspace = true }
+regex = { workspace = true }
+rust-ini = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sysctl ={ workspace = true }
+tokio = { workspace = true }
+libnfqws = { path = "../libnfqws" }
+daemonize = { workspace = true }
+pretty_env_logger = { workspace = true }
+log = { workspace = true }
+nix = { workspace = true, features = ["user"] }
+iptables = { workspace = true }
+getset = { workspace = true }
+sysinfo = { workspace = true }
