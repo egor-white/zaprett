@@ -77,7 +77,7 @@ pub async fn stop_service() -> anyhow::Result<()> {
         bail!("Running not from root, exiting");
     };
 
-    if service_status().await.unwrap() {
+    if !service_status().await.unwrap() {
         bail!("zaprett service alreeady stopped")
     }
 
