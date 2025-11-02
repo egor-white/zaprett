@@ -88,6 +88,7 @@ pub async fn stop_service() -> anyhow::Result<()> {
 
     kill(Pid::from_raw(pid), Signal::SIGKILL)?;
 
+    println!("zaprett service stopped");
     Ok(())
 }
 
