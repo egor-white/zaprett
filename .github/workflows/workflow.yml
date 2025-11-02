@@ -150,7 +150,6 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
-<<<<<<< HEAD
           cat > update-tv.json <<EOF
           {
             "version": "${{ inputs.version }}",
@@ -159,8 +158,6 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
-=======
->>>>>>> origin/rust
       - name: Commit jsons and changelog
         if: ${{ inputs.create_release == 'true' }}
         uses: stefanzweifel/git-auto-commit-action@v5
