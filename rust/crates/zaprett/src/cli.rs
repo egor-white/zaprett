@@ -1,8 +1,8 @@
 pub mod commands;
 
 use clap::Parser;
-use getset::Getters;
 use commands::Command;
+use getset::Getters;
 
 #[derive(Parser, Getters)]
 #[command(version)]

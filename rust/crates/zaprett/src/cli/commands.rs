@@ -1,7 +1,8 @@
 use crate::service::{restart_service, service_status, start_service, stop_service};
-use crate::{bin_version, get_autostart, module_version, set_autostart};
+use crate::{bin_version, module_version};
 use clap::Subcommand;
 use log::error;
+use crate::autostart::{get_autostart, set_autostart};
 
 #[derive(Subcommand)]
 pub enum Command {
@@ -53,7 +54,7 @@ impl Command {
                 );
             }
             Command::SetAutostart { autostart } => {
-                if let Err(err) = set_autostart(autostart).await {
+                if let Err(err) = set_autostart(*autostart).await {
                     error!("Failed to set auto start: {err}")
                 }
             }
