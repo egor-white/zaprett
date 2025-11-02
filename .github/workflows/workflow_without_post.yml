@@ -50,7 +50,7 @@ jobs:
         run: just -f rust/justfile build-android --release
 
       - name: Make build dirs
-        run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett-tv/system/bin zaprett/system/etc/zaprett/lists zapret-latest out lists zapret-hosts/system/etc/zaprett/lists zapret-tv/system/etc/zaprett/lists
+        run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett/system/etc/zaprett/lists out lists zapret-hosts/system/etc/zaprett/lists
 
       - name: Copy files to dirs
         run: |
@@ -60,10 +60,8 @@ jobs:
           cp rust/target/x86_64-linux-android/release/zaprett zaprett/system/bin/zaprett-x86_64
 
           cp -a src/* zaprett/
-
-          #copy all files to another distributions
           cp -r zaprett/* zaprett-hosts/
-          cp -r zaprett/* zaprett-tv/
+    
       - name: Download and copy actual lists
         run: |
           wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-youtube.txt -O lists/list-youtube.txt
@@ -71,7 +69,6 @@ jobs:
 
           cp lists/list-youtube.txt zaprett/system/etc/zaprett/lists/
           cp lists/list-youtube.txt zaprett-hosts/system/etc/zaprett/lists/
-          cp lists/list-youtube.txt zaprett-tv/system/etc/zaprett/lists/
 
           cp lists/list-discord.txt zaprett/system/etc/zaprett/lists/
           cp lists/list-discord.txt zaprett-hosts/system/etc/zaprett/lists/
@@ -100,16 +97,6 @@ jobs:
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-hosts.json
           EOF
 
-          cat > zaprett-tv/module.prop <<EOF
-          id=zaprett
-          name=zaprett-tv
-          version=${{ inputs.version }}
-          versionCode=${{ inputs.version_code }}
-          author=egor-white, Cherret
-          description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
-          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-tv.json
-          EOF
-
       - name: Tree files
         run: |
           tree zaprett/ zaprett-hosts/ zaprett-tv/
@@ -117,11 +104,9 @@ jobs:
         run: |
           cd zaprett && zip -r ../zaprett.zip ./* && cd ..
           cd zaprett-hosts && zip -r ../zaprett-hosts.zip ./* && cd ..
-          cd zaprett-tv && zip -r ../zaprett-tv.zip ./* && cd ..
 
           mv zaprett.zip out/
           mv zaprett-hosts.zip out/
-          mv zaprett-tv.zip out/
         
       - name: Create release
         if: ${{ inputs.create_release == 'true' }}
@@ -166,19 +151,10 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
-          cat > update_tv.json <<EOF
-          {
-            "version": "${{ inputs.version }}",
-            "versionCode": ${{ inputs.version_code }},
-            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/zaprett-tv.zip",
-            "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
-          }
-          EOF
-
       - name: Commit jsons and changelog
         if: ${{ inputs.create_release == 'true' }}
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update update's.json and changelog"
-          file_pattern: "update.json update_hosts.json update_tv.json changelog.md"
+          file_pattern: "update.json update_hosts.json changelog.md"
 
