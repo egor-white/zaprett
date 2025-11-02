@@ -4,7 +4,6 @@ mod daemon;
 pub mod iptables_rust;
 mod service;
 
-use anyhow::bail;
 use ini::Ini;
 use libnfqws::nfqws_main;
 use std::error;
@@ -12,9 +11,9 @@ use std::ffi::CString;
 use std::os::raw::c_char;
 use std::path::Path;
 use std::sync::LazyLock;
+use tokio::fs;
 use tokio::fs::File;
 use tokio::io::{AsyncWriteExt, copy};
-use tokio::{fs, task};
 
 pub static MODULE_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("/data/adb/modules/zaprett"));
 pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
@@ -85,11 +84,7 @@ pub async fn merge_files(
     Ok(())
 }
 
-async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
-    if service::service_status().await? {
-        bail!("nfqws already started!");
-    }
-
+fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
     let mut args = vec![
         "nfqws".to_string(),
         "--uid=0:0".to_string(),
@@ -101,20 +96,16 @@ async fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
     } else {
         args.extend(args_str.split_whitespace().map(String::from));
     }
+    let c_args: Vec<CString> = args
+        .into_iter()
+        .map(|arg| CString::new(arg).unwrap())
+        .collect();
 
-    task::spawn_blocking(move || {
-        let c_args: Vec<CString> = args
-            .into_iter()
-            .map(|arg| CString::new(arg).unwrap())
-            .collect();
+    let mut ptrs: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
 
-        let mut ptrs: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
-
-        unsafe {
-            nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
-        }
-    })
-    .await?;
+    unsafe {
+        nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
+    }
 
     Ok(())
 }

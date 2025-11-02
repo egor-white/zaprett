@@ -12,7 +12,6 @@ pub async fn daemonize_nfqws(args: &str) {
     let daemonize = Daemonize::new()
         .pid_file(MODULE_PATH.join("tmp/pid.lock").as_path())
         .working_directory(MODULE_PATH.join("tmp"))
-        // .group("daemon")
         .stdout(stdout)
         .stderr(stderr)
         .privileged_action(|| "Executed before drop privileges");
@@ -20,7 +19,7 @@ pub async fn daemonize_nfqws(args: &str) {
     match daemonize.start() {
         Ok(_) => {
             info!("Success, daemonized");
-            run_nfqws(args).await.unwrap()
+            run_nfqws(args).unwrap()
         }
         Err(e) => error!("Error while starting nfqws daemon: {e}"),
     }

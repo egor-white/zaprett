@@ -20,6 +20,10 @@ pub async fn start_service() -> anyhow::Result<()> {
         bail!("Running not from root, exiting");
     };
 
+    if service_status().await.unwrap() {
+        bail!("zaprett already started")
+    }
+
     println!("Starting zaprett service...");
 
     let tmp_dir = MODULE_PATH.join("tmp");
@@ -72,6 +76,10 @@ pub async fn stop_service() -> anyhow::Result<()> {
     if !Uid::effective().is_root() {
         bail!("Running not from root, exiting");
     };
+
+    if service_status().await.unwrap() {
+        bail!("zaprett service alreeady stopped")
+    }
 
     clear_iptables_rules().expect("clear iptables rules");
 
