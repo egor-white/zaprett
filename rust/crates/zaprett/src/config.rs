@@ -2,56 +2,27 @@ use crate::{MODULE_PATH, merge_files};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ListType {
+    #[default]
     Whitelist,
     Blacklist,
 }
 
-impl Default for ListType {
-    fn default() -> Self {
-        Self::Whitelist
-    }
-}
-
-#[derive(Serialize, Deserialize, Getters)]
+#[derive(Default, Serialize, Deserialize, Getters)]
 #[getset(get = "pub")]
+#[serde(default)]
 pub struct Config {
-    #[serde(default)]
     active_lists: Vec<String>,
-    #[serde(default)]
     active_ipsets: Vec<String>,
-    #[serde(default)]
     active_exclude_lists: Vec<String>,
-    #[serde(default)]
     active_exclude_ipsets: Vec<String>,
-    #[serde(default)]
     list_type: ListType,
-    #[serde(default)]
     strategy: String,
-    #[serde(default)]
     app_list: String,
-    #[serde(default)]
     whitelist: Vec<String>,
-    #[serde(default)]
     blacklist: Vec<String>,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            active_lists: vec![],
-            active_ipsets: vec![],
-            active_exclude_lists: vec![],
-            active_exclude_ipsets: vec![],
-            list_type: Default::default(),
-            strategy: String::new(),
-            app_list: String::new(),
-            whitelist: vec![],
-            blacklist: vec![],
-        }
-    }
 }
 
 impl ListType {
