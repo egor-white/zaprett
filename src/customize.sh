@@ -7,7 +7,7 @@ ui_print " /___\__,_| .__/|_|  \\___|\__|\__|"
 ui_print "          | |                     "
 ui_print "          |_|                     "
 ui_print "(!) To download app, use Telegram channel"
-ui_print "Module by: egor-white, Cherret, Huananzhi X99"
+ui_print "Module by: egor-white, Cherret"
 ui_print "App by: egor-white, Cherret"
 ui_print "####################"
 
@@ -18,12 +18,20 @@ ui_print "Creating zaprett directory..."
 mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies;
 
 ui_print "Filling configuration file if not exist..."
-if [ ! -f "/sdcard/zaprett/config" ]; then
-    echo active_lists=/storage/emulated/0/zaprett/lists/list-youtube.txt >> /sdcard/zaprett/config
-    echo active_exclude_lists= >> /sdcard/zaprett/config
-    echo list_type=whitelist
-    echo zaprettdir=/sdcard/zaprett >> /sdcard/zaprett/config
-    echo strategy="" >> /sdcard/zaprett/config
+if [ ! -f "/sdcard/zaprett/config.json" ]; then
+    cat > /sdcard/zaprett/config.json << EOL
+    {
+      "active_lists": ["/sdcard/zaprett/lists/include/list-youtube.txt", "/sdcard/zaprett/lists/include/list-youtube.txt"],
+      "active_ipsets": [],
+      "active_exclude_lists": [],
+      "active_exclude_ipsets": [],
+      "list_type": "whitelist",
+      "strategy": "",
+      "app_list": "whitelist",
+      "whitelist": [],
+      "blacklist": []
+    }
+    EOL
 fi
 
 ui_print "Copying lists and binaries to /sdcard/zaprett..."
@@ -56,4 +64,4 @@ chmod 777 /sdcard/zaprett; chmod 777 $MODPATH/service.sh
 ui_print "Cleaning temp files..."
 rm -rf $MODPATH/system/etc/zaprett
 
-ui_print "Installation done. Telegram channel: https://t.me/zaprett_module"
+ui_print "Installation done. Join us in Telegram: https://t.me/zaprett_module"
