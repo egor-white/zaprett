@@ -53,7 +53,7 @@ impl Command {
                 );
             }
             Command::SetAutostart { autostart } => {
-                if let Err(err) = set_autostart(autostart).await {
+                if let Err(err) = set_autostart(*autostart).await {
                     error!("Failed to set auto start: {err}")
                 }
             }

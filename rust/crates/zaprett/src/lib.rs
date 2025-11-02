@@ -28,10 +28,10 @@ pub static DEFAULT_START: &str = "
         --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist
         ";
 
-async fn set_autostart(autostart: &bool) -> Result<(), anyhow::Error> {
+async fn set_autostart(autostart: bool) -> Result<(), anyhow::Error> {
     let autostart_path = MODULE_PATH.join("autostart");
 
-    if *autostart {
+    if autostart {
         File::create(autostart_path).await?;
     } else {
         fs::remove_file(autostart_path).await?;
