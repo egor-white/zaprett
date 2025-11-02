@@ -58,7 +58,7 @@ impl Command {
                     error!("Failed to set auto start: {err}")
                 }
             }
-            Command::GetAutostart => get_autostart(),
+            Command::GetAutostart => println!("{}", get_autostart()),
             Command::ModuleVersion => module_version(),
             Command::BinaryVersion => bin_version(),
         }
