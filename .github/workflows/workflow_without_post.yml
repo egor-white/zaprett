@@ -151,6 +151,7 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
+  
       - name: Commit jsons and changelog
         if: ${{ inputs.create_release == 'true' }}
         uses: stefanzweifel/git-auto-commit-action@v5
