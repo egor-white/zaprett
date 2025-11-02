@@ -66,16 +66,16 @@ pub async fn merge_files(
     let mut output_file = File::create(output_path).await?;
 
     for input in input_paths {
-        let input_path = input.as_ref();
-        let mut input_file = File::open(input_path)
+        let input = input.as_ref();
+
+        let mut input_file = File::open(input)
             .await
-            .map_err(|e| format!("Failed to open {}: {}", input_path.display(), e))?;
+            .map_err(|e| format!("Failed to open {}: {e}", input.display()))?;
 
         copy(&mut input_file, &mut output_file).await.map_err(|e| {
             format!(
-                "Failed to write contents of {}: {}",
-                input_path.display(),
-                e
+                "Failed to write contents of {}: {e}",
+                input.display()
             )
         })?;
     }
@@ -96,6 +96,7 @@ fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
     } else {
         args.extend(args_str.split_whitespace().map(String::from));
     }
+
     let c_args: Vec<CString> = args
         .into_iter()
         .map(|arg| CString::new(arg).unwrap())
