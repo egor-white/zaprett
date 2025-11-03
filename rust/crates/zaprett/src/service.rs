@@ -13,6 +13,7 @@ use sysinfo::{Pid as SysPid, System};
 use tokio::fs;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
+use std::path::Path;
 
 pub async fn start_service() -> anyhow::Result<()> {
     if !Uid::effective().is_root() {
@@ -106,17 +107,19 @@ pub async fn service_status() -> anyhow::Result<bool> {
         bail!("Running not from root, exiting");
     };
 
-    let Ok(Some(pid)) = fs::read_to_string(MODULE_PATH.join("/tmp/pid.lock"))
-        .await
-        .map(|s| s.trim().parse::<usize>().ok())
-    else {
-        bail!("failed to get pid");
+    let pid_i32 = match fs::read_to_string(Path::new(*MODULE_PATH).join("tmp/pid.lock")).await {
+        Ok(s) => match s.trim().parse::<i32>() {
+            Ok(pid) => pid,
+            Err(_) => return Ok(false),
+        },
+        Err(_) => return Ok(false),
     };
-
-    let is_zaprett = System::new_all()
-        .process(SysPid::from(pid))
-        .map(|process| process.name() == "zaprett")
-        .unwrap_or(false);
-
-    Ok(is_zaprett)
+    let pid = SysPid::from(pid_i32 as usize);
+    let system = System::new_all();
+    if let Some(process) = system.process(pid) {
+        if process.name() == "zaprett" {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }

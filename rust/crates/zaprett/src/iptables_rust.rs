@@ -1,51 +1,88 @@
 use std::error;
+use std::process::Command;
 
 pub fn setup_iptables_rules() -> Result<(), Box<dyn error::Error>> {
-    let ipt = iptables::new(false)?;
+    Command::new("iptables")
+        .arg("-t")
+        .arg("mangle")
+        .arg("-I")
+        .arg("POSTROUTING")
+        .arg("-j")
+        .arg("NFQUEUE")
+        .arg("--queue-num")
+        .arg("200")
+        .arg("--queue-bypass")
+        .status()
+        .expect("failed to add iptables rules");
 
-    ipt.insert(
-        "mangle",
-        "POSTROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-        1,
-    )?;
+    Command::new("iptables")
+        .arg("-t")
+        .arg("mangle")
+        .arg("-I")
+        .arg("PREROUTING")
+        .arg("-j")
+        .arg("NFQUEUE")
+        .arg("--queue-num")
+        .arg("200")
+        .arg("--queue-bypass")
+        .status()
+        .expect("failed to add iptables rules");
 
-    ipt.insert(
-        "mangle",
-        "PREROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-        1,
-    )?;
-
-    ipt.append(
-        "filter",
-        "FORWARD",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )?;
+    Command::new("iptables")
+        .arg("-t")
+        .arg("filter")
+        .arg("-A")
+        .arg("FORWARD")
+        .arg("-j")
+        .arg("NFQUEUE")
+        .arg("--queue-num")
+        .arg("200")
+        .arg("--queue-bypass")
+        .status()
+        .expect("failed to add iptables rules");
 
     Ok(())
 }
 
 pub fn clear_iptables_rules() -> Result<(), Box<dyn error::Error>> {
-    let ipt = iptables::new(false)?;
+    Command::new("iptables")
+        .arg("-t")
+        .arg("mangle")
+        .arg("-D")
+        .arg("POSTROUTING")
+        .arg("-j")
+        .arg("NFQUEUE")
+        .arg("--queue-num")
+        .arg("200")
+        .arg("--queue-bypass")
+        .status()
+        .expect("failed to remove iptables rules");
 
-    ipt.delete(
-        "mangle",
-        "POSTROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )?;
+    Command::new("iptables")
+        .arg("-t")
+        .arg("mangle")
+        .arg("-D")
+        .arg("PREROUTING")
+        .arg("-j")
+        .arg("NFQUEUE")
+        .arg("--queue-num")
+        .arg("200")
+        .arg("--queue-bypass")
+        .status()
+        .expect("failed to remove iptables rules");
 
-    ipt.delete(
-        "mangle",
-        "PREROUTING",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )?;
-
-    ipt.delete(
-        "filter",
-        "FORWARD",
-        "-j NFQUEUE --queue-num 200 --queue-bypass",
-    )?;
+    Command::new("iptables")
+        .arg("-t")
+        .arg("filter")
+        .arg("-D")
+        .arg("FORWARD")
+        .arg("-j")
+        .arg("NFQUEUE")
+        .arg("--queue-num")
+        .arg("200")
+        .arg("--queue-bypass")
+        .status()
+        .expect("failed to remove iptables rules");
 
     Ok(())
 }

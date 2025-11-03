@@ -328,15 +328,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "135b12329e5e3ce057a9f972339ea52bc954fe1e9358ef27f95e89716fbc5424"
 
 [[package]]
-name = "iptables"
-version = "0.6.0"
-source = "git+https://github.com/egor-white/rust-iptables-android.git?branch=add-android#15e43378308c766919e029ef315ee1681990c78f"
-dependencies = [
- "lazy_static",
- "regex",
-]
-
-[[package]]
 name = "is-terminal"
 version = "0.4.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -367,12 +358,6 @@ name = "itoa"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
-
-[[package]]
-name = "lazy_static"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
@@ -1126,7 +1111,6 @@ dependencies = [
  "clap",
  "daemonize",
  "getset",
- "iptables",
  "libc",
  "libnfqws",
  "log",
