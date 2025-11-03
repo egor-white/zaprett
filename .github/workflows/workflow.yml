@@ -145,20 +145,12 @@ jobs:
             "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
           }
           EOF
-          cat > update-tv.json <<EOF
-          {
-            "version": "${{ inputs.version }}",
-            "versionCode": ${{ inputs.version_code }},
-            "zipUrl": "https://github.com/${{ github.repository }}/releases/download/${{ inputs.tag }}/zaprett-tv.zip",
-            "changelog": "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/main/changelog.md"
-          }
-          EOF
       - name: Commit jsons and changelog
         if: ${{ inputs.create_release == 'true' }}
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Update update's.json and changelog"
-          file_pattern: "update.json update_hosts.json changelog.md"
+          file_pattern: "update.json update-hosts.json changelog.md"
       - name: Send bot post
         env:
           MESSAGE_TEXT: |
