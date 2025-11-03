@@ -96,9 +96,6 @@ jobs:
           updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-hosts.json
           EOF
 
-      - name: Tree files
-        run: |
-          tree zaprett/ zaprett-hosts/ zaprett-tv/
       - name: Create archives
         run: |
           cd zaprett && zip -r ../zaprett.zip ./* && cd ..
@@ -124,8 +121,6 @@ jobs:
         with:
           name: zaprett
           path: out/*
-
-      
 
       - name: Update changelog
         if: ${{ inputs.create_release == 'true' }}
