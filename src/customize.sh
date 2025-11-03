@@ -21,7 +21,7 @@ ui_print "Filling configuration file if not exist..."
 if [ ! -f "/sdcard/zaprett/config.json" ]; then
     cat > /sdcard/zaprett/config.json << EOL
     {
-      "active_lists": ["/sdcard/zaprett/lists/include/list-youtube.txt", "/sdcard/zaprett/lists/include/list-youtube.txt"],
+      "active_lists": ["/sdcard/zaprett/lists/include/list-youtube.txt", "/sdcard/zaprett/lists/include/list-discord.txt"],
       "active_ipsets": [],
       "active_exclude_lists": [],
       "active_exclude_ipsets": [],
@@ -31,7 +31,7 @@ if [ ! -f "/sdcard/zaprett/config.json" ]; then
       "whitelist": [],
       "blacklist": []
     }
-    EOL
+EOL
 fi
 
 ui_print "Copying lists and binaries to /sdcard/zaprett..."
