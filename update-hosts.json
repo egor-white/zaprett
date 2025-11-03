@@ -1,6 +1,6 @@
 {
-  "version": "5.2",
-  "versionCode": 52,
-  "zipUrl": "https://github.com/egor-white/zaprett/releases/download/5.2.0/zaprett-hosts.zip",
+  "version": "6.0",
+  "versionCode": 60,
+  "zipUrl": "https://github.com/egor-white/zaprett/releases/download/6.0.0/zaprett-hosts.zip",
   "changelog": "https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/changelog.md"
 }
