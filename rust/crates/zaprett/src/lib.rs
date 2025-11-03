@@ -12,10 +12,14 @@ use std::ffi::CString;
 use std::os::raw::c_char;
 use std::path::Path;
 use std::sync::LazyLock;
+use anyhow::bail;
 use tokio::fs::File;
 use tokio::io::{copy, AsyncWriteExt};
+use tokio::task::spawn_blocking;
 
-pub static MODULE_PATH: LazyLock<&Path> = LazyLock::new(|| Path::new("/data/adb/modules/zaprett"));
+pub static MODULE_PATH: LazyLock<&Path> =
+    LazyLock::new(|| Path::new("/data/adb/modules/zaprett"));
+
 pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
     LazyLock::new(|| Path::new("/storage/emulated/0/zaprett"));
 
@@ -28,17 +32,21 @@ pub static DEFAULT_START: &str = "
         --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist
         ";
 
-fn module_version() {
-    if let Ok(prop) = Ini::load_from_file(MODULE_PATH.join("module.prop"))
-        && let Some(props) = prop.section::<String>(None)
+async fn module_version() -> anyhow::Result<String> {
+    let prop = spawn_blocking(|| Ini::load_from_file(MODULE_PATH.join("module.prop")))
+        .await??;
+
+    if let Some(props) = prop.section::<String>(None)
         && let Some(version) = props.get("version")
     {
-        println!("{version}");
+        return Ok(version.into());
     }
+
+    bail!("Failed to get version, prop not found")
 }
 
-fn bin_version() {
-    println!("{}", env!("ZAPRET_VERSION"));
+fn bin_version() -> &'static str {
+    env!("ZAPRET_VERSION")
 }
 
 pub async fn merge_files(

@@ -59,8 +59,8 @@ impl Command {
                 }
             }
             Command::GetAutostart => get_autostart(),
-            Command::ModuleVersion => module_version(),
-            Command::BinaryVersion => bin_version(),
+            Command::ModuleVersion => println!("{}", module_version().await?),
+            Command::BinaryVersion => println!("{}", bin_version()),
         }
 
         Ok(())
