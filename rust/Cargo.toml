@@ -24,3 +24,9 @@ pretty_env_logger = "0.5.0"
 nix = { version = "0.30.1", features = ["signal"] }
 getset = "0.1.6"
 sysinfo = "0.37.2"
+
+[profile.release]
+panic = "abort"
+opt-level = "z"
+lto = true
+strip = true
