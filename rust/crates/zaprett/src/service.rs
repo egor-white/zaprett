@@ -8,12 +8,12 @@ use nix::sys::signal::{Signal, kill};
 use nix::unistd::{Pid, Uid};
 use regex::Regex;
 use std::borrow::Cow;
+use std::io::ErrorKind;
+use std::path::Path;
 use sysctl::{Ctl, CtlValue, Sysctl};
 use sysinfo::{Pid as SysPid, System};
 use tokio::fs;
-use tokio::fs::File;
 use tokio::io::AsyncReadExt;
-use std::path::Path;
 
 pub async fn start_service() -> anyhow::Result<()> {
     if !Uid::effective().is_root() {
@@ -32,14 +32,26 @@ pub async fn start_service() -> anyhow::Result<()> {
         fs::create_dir_all(&tmp_dir).await?;
     }
 
+    let config_path = ZAPRETT_DIR_PATH.join("config.json");
     let mut config_contents = String::new();
-    File::open(ZAPRETT_DIR_PATH.join("config.json"))
-        .await
-        .expect("cannot open config.json")
-        .read_to_string(&mut config_contents)
-        .await?;
 
-    let config: Config = serde_json::from_str(&config_contents).expect("invalid json");
+    match fs::File::open(&config_path).await {
+        Ok(mut file) => {
+            file.read_to_string(&mut config_contents).await?;
+        }
+        Err(e) if e.kind() == ErrorKind::NotFound => {
+            let default_config = Config::default();
+            let json = serde_json::to_string_pretty(&default_config)?;
+            if let Some(parent) = config_path.parent() {
+                fs::create_dir_all(parent).await?;
+            }
+            fs::write(&config_path, &json).await?;
+            config_contents = json;
+        }
+        Err(e) => return Err(e.into()),
+    }
+
+    let config: Config = serde_json::from_str(&config_contents)?;
 
     let start = fs::read_to_string(config.strategy())
         .await

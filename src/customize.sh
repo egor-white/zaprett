@@ -17,23 +17,6 @@ unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >&2
 ui_print "Creating zaprett directory..."
 mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies;
 
-ui_print "Filling configuration file if not exist..."
-if [ ! -f "/sdcard/zaprett/config.json" ]; then
-    cat > /sdcard/zaprett/config.json << EOL
-    {
-      "active_lists": ["/sdcard/zaprett/lists/include/list-youtube.txt", "/sdcard/zaprett/lists/include/list-discord.txt"],
-      "active_ipsets": [],
-      "active_exclude_lists": [],
-      "active_exclude_ipsets": [],
-      "list_type": "whitelist",
-      "strategy": "",
-      "app_list": "whitelist",
-      "whitelist": [],
-      "blacklist": []
-    }
-EOL
-fi
-
 ui_print "Copying lists and binaries to /sdcard/zaprett..."
 cp -r $MODPATH/system/etc/zaprett/. /sdcard/zaprett/
 
