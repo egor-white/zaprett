@@ -20,6 +20,9 @@ mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; m
 ui_print "Copying lists and binaries to /sdcard/zaprett..."
 cp -r $MODPATH/system/etc/zaprett/. /sdcard/zaprett/
 
+ui_print "Remove exiting config.json"
+rm /sdcard/zaprett/config.json
+
 ui_print "Copying files to /bin"
 arch=$(uname -m)
 case "$arch" in
