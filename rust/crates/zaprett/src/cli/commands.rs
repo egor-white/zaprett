@@ -67,7 +67,7 @@ impl Command {
             Command::GetAutostart => get_autostart(),
             Command::ModuleVersion => println!("{}", module_version().await?),
             Command::BinaryVersion => println!("{}", bin_version()),
-            Command::Args { args } => run_nfqws(&args.join("")).unwrap(),
+            Command::Args { args } => run_nfqws(&args.join(" "))?,
         }
 
         Ok(())
