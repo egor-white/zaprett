@@ -1,8 +1,8 @@
+use crate::autostart::{get_autostart, set_autostart};
 use crate::service::{restart_service, service_status, start_service, stop_service};
-use crate::{bin_version, module_version};
+use crate::{bin_version, module_version, run_nfqws};
 use clap::Subcommand;
 use log::error;
-use crate::autostart::{get_autostart, set_autostart};
 
 #[derive(Subcommand)]
 pub enum Command {
@@ -33,6 +33,12 @@ pub enum Command {
 
     /// Show the nfqws binary version
     BinaryVersion,
+
+    /// Run nfqws
+    Args {
+        #[arg(allow_hyphen_values=true, trailing_var_arg = true, num_args = 0..)]
+        args: Vec<String>,
+    },
 }
 
 impl Command {
@@ -61,6 +67,7 @@ impl Command {
             Command::GetAutostart => get_autostart(),
             Command::ModuleVersion => println!("{}", module_version().await?),
             Command::BinaryVersion => println!("{}", bin_version()),
+            Command::Args { args } => run_nfqws(&args.join("")).unwrap(),
         }
 
         Ok(())
