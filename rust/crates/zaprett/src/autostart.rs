@@ -2,19 +2,20 @@ use crate::MODULE_PATH;
 use tokio::fs;
 use tokio::fs::File;
 
-pub async fn set_autostart(autostart: bool) -> Result<(), anyhow::Error> {
+pub async fn set_autostart() -> Result<(), anyhow::Error> {
     let autostart_path = MODULE_PATH.join("autostart");
 
-    if autostart {
-        File::create(autostart_path).await?;
+    if !get_autostart() {
+        File::create(MODULE_PATH.join("autostart")).await?;
     } else {
         fs::remove_file(autostart_path).await?;
     }
 
+    println!("{}", get_autostart());
+
     Ok(())
 }
 
-pub fn get_autostart() {
-    let file = MODULE_PATH.join("autostart");
-    println!("{}", file.exists());
+pub fn get_autostart() -> bool {
+    return MODULE_PATH.join("autostart").exists();
 }

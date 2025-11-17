@@ -19,11 +19,7 @@ pub enum Command {
     Status,
 
     /// Enable or disable automatic restart
-    SetAutostart {
-        /// Whether to enable (true) or disable (false) autostart
-        #[arg(value_parser = clap::value_parser!(bool))]
-        autostart: bool,
-    },
+    SetAutostart,
 
     /// Show whether autostart is enabled
     GetAutostart,
@@ -59,12 +55,12 @@ impl Command {
                     }
                 );
             }
-            Command::SetAutostart { autostart } => {
-                if let Err(err) = set_autostart(*autostart).await {
+            Command::SetAutostart => {
+                if let Err(err) = set_autostart().await {
                     error!("Failed to set auto start: {err}")
                 }
             }
-            Command::GetAutostart => get_autostart(),
+            Command::GetAutostart => println!("{}", get_autostart()),
             Command::ModuleVersion => println!("{}", module_version().await?),
             Command::BinaryVersion => println!("{}", bin_version()),
             Command::Args { args } => run_nfqws(&args.join(" "))?,
