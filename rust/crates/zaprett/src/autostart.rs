@@ -6,7 +6,7 @@ pub async fn set_autostart() -> Result<(), anyhow::Error> {
     let autostart_path = MODULE_PATH.join("autostart");
 
     if !get_autostart() {
-        File::create(MODULE_PATH.join("autostart")).await?;
+        File::create(autostart_path).await?;
     } else {
         fs::remove_file(autostart_path).await?;
     }
