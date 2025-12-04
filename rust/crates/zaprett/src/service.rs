@@ -90,7 +90,8 @@ pub async fn stop_service() -> anyhow::Result<()> {
     };
 
     if !service_status().await? {
-        bail!("zaprett service already stopped")
+        info!("zaprett service already stopped");
+        return Ok(())
     }
 
     clear_iptables_rules().expect("clear iptables rules");
