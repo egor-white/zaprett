@@ -11,17 +11,11 @@ ui_print "Module by: egor-white, Cherret"
 ui_print "App by: egor-white, Cherret"
 ui_print "####################"
 
-ui_print "Unpacking archive..."
-unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >&2
-
 ui_print "Creating zaprett directory..."
 mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies;
 
 ui_print "Copying lists and binaries to /sdcard/zaprett..."
 cp -r $MODPATH/system/etc/zaprett/. /sdcard/zaprett/
-
-ui_print "Remove exiting config.json"
-rm /sdcard/zaprett/config.json
 
 ui_print "Copying files to /bin"
 arch=$(uname -m)
@@ -43,9 +37,6 @@ esac
 mv $MODPATH/system/bin/$zaprett_bin $MODPATH/system/bin/zaprett
 rm $MODPATH/system/bin/zaprett-*
 mkdir $MODPATH/tmp
-
-ui_print "Setting permissions..."
-chmod 777 /sdcard/zaprett; chmod 777 $MODPATH/service.sh
 
 ui_print "Cleaning temp files..."
 rm -rf $MODPATH/system/etc/zaprett
