@@ -1,6 +1,6 @@
 {
-  "version": "6.3",
-  "versionCode": 63,
-  "zipUrl": "https://github.com/egor-white/zaprett/releases/download/6.3.0/zaprett.zip",
+  "version": "6.4",
+  "versionCode": 64,
+  "zipUrl": "https://github.com/egor-white/zaprett/releases/download/6.4.0/zaprett.zip",
   "changelog": "https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/changelog.md"
 }
