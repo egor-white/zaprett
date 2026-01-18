@@ -42,7 +42,7 @@ jobs:
 
       - name: Setup Git submodules
         run: git submodule update --init --recursive
-        
+
       - name: Install dependencies
         run: sudo apt install build-essential pkg-config just unzip
 
@@ -60,17 +60,15 @@ jobs:
 
           cp -a src/* zaprett/
           cp -r zaprett/* zaprett-hosts/
-    
+
       - name: Download and copy actual lists
         run: |
           wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-youtube.txt -O lists/list-youtube.txt
           wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-discord.txt -O lists/list-discord.txt
 
-          cp lists/list-youtube.txt zaprett/system/etc/zaprett/lists/
-          cp lists/list-youtube.txt zaprett-hosts/system/etc/zaprett/lists/
+          cp lists/* zaprett/lists/
 
-          cp lists/list-discord.txt zaprett/system/etc/zaprett/lists/
-          cp lists/list-discord.txt zaprett-hosts/system/etc/zaprett/lists/
+          cp lists/* zaprett-hosts/system/etc/zaprett/lists/
 
           cp hosts/hosts zaprett-hosts/system/etc
 
@@ -103,7 +101,7 @@ jobs:
 
           mv zaprett.zip out/
           mv zaprett-hosts.zip out/
-        
+
       - name: Create release
         if: ${{ inputs.create_release == 'true' }}
         uses: softprops/action-gh-release@v2
