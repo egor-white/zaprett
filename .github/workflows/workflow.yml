@@ -50,7 +50,7 @@ jobs:
         run: just -f rust/justfile build-android --release
 
       - name: Make build dirs
-        run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett/system/etc/zaprett/lists out lists zapret-hosts/system/etc/zaprett/lists
+        run: mkdir -p zaprett/system/bin zaprett-hosts/system/bin zaprett/zaprett/lists out lists zapret-hosts/zaprett/lists
 
       - name: Copy files to dirs
         run: |
