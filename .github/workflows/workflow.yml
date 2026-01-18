@@ -53,11 +53,11 @@ jobs:
         run: |
           mkdir -p zaprett/system/bin
           mkdir -p zaprett/zaprett/bin
-          mkdir -p zaprett/zaprett/lists
+          mkdir -p zaprett/zaprett/lists/include
 
           mkdir -p zaprett-hosts/system/bin
           mkdir -p zaprett-hosts/zaprett/bin
-          mkdir -p zaprett-hosts/zaprett/lists
+          mkdir -p zaprett-hosts/zaprett/lists/include
 
           mkdir -p out lists
 
@@ -75,9 +75,9 @@ jobs:
           wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-youtube.txt -O lists/list-youtube.txt
           wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-discord.txt -O lists/list-discord.txt
 
-          cp lists/* zaprett/zaprett/lists/
+          cp lists/* zaprett/zaprett/lists/include
 
-          cp lists/* zaprett-hosts/zaprett/lists/
+          cp lists/* zaprett-hosts/zaprett/lists/include
 
           cp hosts/hosts zaprett-hosts/system/etc
 
