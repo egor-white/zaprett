@@ -20,7 +20,7 @@ _download_android_ndk:
 
         curl -L -C - -o "$TMPFILE" "https://dl.google.com/android/repository/android-ndk-{{ANDROID_NDK_VERSION}}.zip"
 
-        unzip "$TMPFILE" -d "$TMPDIR"
+        unzip -q "$TMPFILE" -d "$TMPDIR"
 
         inner_folder=$(find "$TMPDIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
         mv -T "$inner_folder" "$NDK_HOME"
