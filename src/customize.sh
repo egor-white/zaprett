@@ -15,7 +15,7 @@ ui_print "Creating zaprett directory..."
 mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies;
 
 ui_print "Copying lists and binaries to /sdcard/zaprett..."
-cp -r $MODPATH/system/etc/zaprett/. /sdcard/zaprett/
+cp -r $MODPATH/zaprett/. /sdcard/zaprett/
 
 ui_print "Copying files to /bin"
 arch=$(uname -m)
@@ -37,8 +37,5 @@ esac
 mv $MODPATH/system/bin/$zaprett_bin $MODPATH/system/bin/zaprett
 rm $MODPATH/system/bin/zaprett-*
 mkdir $MODPATH/tmp
-
-ui_print "Cleaning temp files..."
-rm -rf $MODPATH/system/etc/zaprett
 
 ui_print "Installation done. Join us in Telegram: https://t.me/zaprett_module"
