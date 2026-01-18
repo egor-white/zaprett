@@ -75,9 +75,9 @@ jobs:
           wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-youtube.txt -O lists/list-youtube.txt
           wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-discord.txt -O lists/list-discord.txt
 
-          cp lists/* zaprett/lists/
+          cp lists/* zaprett/zaprett/lists/
 
-          cp lists/* zaprett-hosts/system/etc/zaprett/lists/
+          cp lists/* zaprett-hosts/zaprett/lists/
 
           cp hosts/hosts zaprett-hosts/system/etc
 
