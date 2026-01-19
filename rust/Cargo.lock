@@ -386,6 +386,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "libnfqws2"
+version = "0.0.1"
+dependencies = [
+ "bindgen",
+ "cc",
+ "glob",
+ "once_cell",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
