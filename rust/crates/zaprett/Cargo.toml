@@ -21,3 +21,4 @@ log = { workspace = true }
 nix = { workspace = true, features = ["user"] }
 getset = { workspace = true }
 sysinfo = { workspace = true }
+luajit = "0.1.1"
