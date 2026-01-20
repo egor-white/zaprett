@@ -2,7 +2,6 @@ use crate::autostart::{get_autostart, set_autostart};
 use crate::service::{restart_service, service_status, start_service, stop_service};
 use crate::{bin_version, module_version, run_nfqws};
 use clap::Subcommand;
-use log::error;
 
 #[derive(Subcommand)]
 pub enum Command {
@@ -40,11 +39,9 @@ pub enum Command {
 impl Command {
     pub async fn exec(&self) -> anyhow::Result<()> {
         match self {
-            Command::Start => return start_service().await,
-            Command::Stop => {
-                let _ = stop_service().await;
-            }
-            Command::Restart => return restart_service().await,
+            Command::Start => start_service().await?,
+            Command::Stop => stop_service().await?,
+            Command::Restart => restart_service().await?,
             Command::Status => {
                 println!(
                     "zaprett is {}",
@@ -55,11 +52,7 @@ impl Command {
                     }
                 );
             }
-            Command::SetAutostart => {
-                if let Err(err) = set_autostart().await {
-                    error!("Failed to set auto start: {err}")
-                }
-            }
+            Command::SetAutostart => set_autostart().await?,
             Command::GetAutostart => println!("{}", get_autostart()),
             Command::ModuleVersion => println!("{}", module_version().await?),
             Command::BinaryVersion => println!("{}", bin_version()),
