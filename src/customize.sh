@@ -38,4 +38,7 @@ mv $MODPATH/system/bin/$zaprett_bin $MODPATH/system/bin/zaprett
 rm $MODPATH/system/bin/zaprett-*
 mkdir $MODPATH/tmp
 
+ui_print "Cleaning temp files..."
+rm -rf $MODPATH/zaprett
+
 ui_print "Installation done. Join us in Telegram: https://t.me/zaprett_module"
