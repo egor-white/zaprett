@@ -36,8 +36,11 @@ fn main() {
     println!("cargo:rustc-link-lib=netfilter_queue");
     println!("cargo:rustc-link-lib=nfnetlink");
     println!("cargo:rustc-link-lib=mnl");
+    println!("cargo:rustc-link-lib=static=luajit-5.1");
 
     let _ = env::var("NETFILTER_LIBS")
+        .map(|libs| println!("cargo:rustc-link-search=native={libs}/lib"));
+    let _ = env::var("LUAJIT_LIBS")
         .map(|libs| println!("cargo:rustc-link-search=native={libs}/lib"));
 
     println!("cargo:rustc-link-lib=static=nfqws2");
@@ -53,8 +56,11 @@ fn main() {
     {
         builder = builder.header(header.to_string_lossy());
     }
-
-    builder = builder.clang_arg("-Dmain=nfqws2_main");
+    if let Ok(luajit) = env::var("LUAJIT") {
+        builder = builder
+            .clang_arg(format!("-I{}", luajit))
+            .clang_arg("-Dmain=nfqws2_main");
+    }
 
     let bindings = builder
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))

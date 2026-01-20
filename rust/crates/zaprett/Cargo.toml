@@ -15,10 +15,10 @@ serde_json = { workspace = true }
 sysctl ={ workspace = true }
 tokio = { workspace = true }
 libnfqws = { path = "../libnfqws" }
+libnfqws2 = { path = "../libnfqws2" }
 daemonize = { workspace = true }
 pretty_env_logger = { workspace = true }
 log = { workspace = true }
 nix = { workspace = true, features = ["user"] }
 getset = { workspace = true }
 sysinfo = { workspace = true }
-luajit = "0.1.1"

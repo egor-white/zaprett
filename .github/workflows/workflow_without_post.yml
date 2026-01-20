@@ -44,7 +44,10 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Install dependencies
-        run: sudo apt install build-essential pkg-config just unzip
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y build-essential pkg-config just unzip libc6-dev-i386 gcc-multilib
 
       - name: Build zaprett
         run: just -f rust/justfile build-android --release

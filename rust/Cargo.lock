@@ -411,15 +411,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34080505efa8e45a4b816c349525ebe327ceaa8559756f0356cba97ef3bf7432"
 
 [[package]]
-name = "luajit"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "216ed8eb8f7edfb5bfc1163cce9747517ed2ea7656a884640791a2be86b86e54"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1132,8 +1123,8 @@ dependencies = [
  "getset",
  "libc",
  "libnfqws",
+ "libnfqws2",
  "log",
- "luajit",
  "nix",
  "pretty_env_logger",
  "regex",
