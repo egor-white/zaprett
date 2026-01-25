@@ -23,7 +23,7 @@ pub static MODULE_PATH: LazyLock<&Path> =
 pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
     LazyLock::new(|| Path::new("/storage/emulated/0/zaprett"));
 
-pub static DEFAULT_START: &str = "
+pub static DEFAULT_STRATEGY_NFQWS: &str = "
         --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new
         --filter-tcp=443 $hostlist --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new
         --filter-tcp=80,443 --dpi-desync=fake,disorder2 --dpi-desync-repeats=6 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new

@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::daemon::daemonize_nfqws;
 use crate::iptables_rust::{clear_iptables_rules, setup_iptables_rules};
-use crate::{DEFAULT_START, MODULE_PATH, ZAPRETT_DIR_PATH};
+use crate::{DEFAULT_STRATEGY_NFQWS, MODULE_PATH, ZAPRETT_DIR_PATH};
 use anyhow::bail;
 use log::info;
 use nix::sys::signal::{Signal, kill};
@@ -56,7 +56,7 @@ pub async fn start_service() -> anyhow::Result<()> {
     let start = fs::read_to_string(config.strategy())
         .await
         .map(Cow::Owned)
-        .unwrap_or(Cow::Borrowed(DEFAULT_START));
+        .unwrap_or(Cow::Borrowed(DEFAULT_STRATEGY_NFQWS));
 
     let regex_hostlist = Regex::new(r"\$hostlist")?;
     let regex_ipsets = Regex::new(r"\$ipset")?;
