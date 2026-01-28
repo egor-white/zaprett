@@ -114,7 +114,7 @@ _build_luajit target_arch:
     fi
 
 
-_instal_rust_target target:st
+_instal_rust_target target:
     #!/usr/bin/env bash
     if ! rustup target list --installed | grep -q "{{target}}"; then
         echo "Installing missing target: {{target}}"
