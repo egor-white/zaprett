@@ -36,7 +36,7 @@ fn main() {
     println!("cargo:rustc-link-lib=netfilter_queue");
     println!("cargo:rustc-link-lib=nfnetlink");
     println!("cargo:rustc-link-lib=mnl");
-    println!("cargo:rustc-link-lib=static=luajit-5.1");
+    println!("cargo:rustc-link-lib=static=luajit");
 
     let _ = env::var("NETFILTER_LIBS")
         .map(|libs| println!("cargo:rustc-link-search=native={libs}/lib"));

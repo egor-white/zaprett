@@ -106,13 +106,15 @@ _build_luajit target_arch:
                CFLAGS="-Os -flto=auto" -j$(nproc)
 
           make install PREFIX= DESTDIR="{{LUAJIT_LIBS}}-{{target_arch}}"
+          mv "{{LUAJIT_LIBS}}-{{target_arch}}/lib/libluajit-5.1.a" \
+             "{{LUAJIT_LIBS}}-{{target_arch}}/lib/libluajit.a"
         )
     else
         echo "LuaJIT for {{target_arch}} already built"
     fi
 
 
-_instal_rust_target target:
+_instal_rust_target target:st
     #!/usr/bin/env bash
     if ! rustup target list --installed | grep -q "{{target}}"; then
         echo "Installing missing target: {{target}}"
