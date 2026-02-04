@@ -106,7 +106,7 @@ fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
 
 fn run_nfqws2(args_str: &str) -> anyhow::Result<()> {
     let mut args = vec![
-        "nfqws".to_string(),
+        "nfqws2".to_string(),
         "--uid=0:0".to_string(),
         "--qnum=200".to_string(),
     ];

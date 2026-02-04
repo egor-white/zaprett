@@ -1,6 +1,7 @@
 use once_cell::sync::Lazy;
 use std::env;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 macro_rules! rel_manifest_path {
     ($name:ident, $path:expr) => {
@@ -159,7 +160,6 @@ fn main() {
         "print_cidr6",
         "parse_cidr4",
         "parse_cidr6",
-        // "__clear_cache"
     ];
     let mut cc_builder = cc::Build::new();
     cc_builder.files(
@@ -182,11 +182,36 @@ fn main() {
     cc_builder.define("main", "nfqws2_main");
     cc_builder.compile("libnfqws2.a");
 
+    let compiler = cc_builder.get_compiler();
+    let output = compiler.to_command()
+        .arg("-print-libgcc-file-name")
+        .output()
+        .expect("Failed to query compiler for libgcc path");
+
+    let path_str = String::from_utf8(output.stdout).unwrap();
+    let lib_path = Path::new(path_str.trim());
+
+    if lib_path.exists() {
+        if let Some(parent) = lib_path.parent() {
+            println!("cargo:rustc-link-search=native={}", parent.display());
+        }
+
+        if let Some(stem) = lib_path.file_stem() {
+            let lib_name = stem.to_string_lossy();
+            let lib_name = lib_name.strip_prefix("lib").unwrap_or(&lib_name);
+            println!("cargo:rustc-link-lib=static={}", lib_name);
+        }
+    } else {
+        println!("cargo:warning=Could not find compiler builtins library at {:?}", lib_path);
+        println!("cargo:rustc-link-lib=gcc");
+    }
+
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=netfilter_queue");
     println!("cargo:rustc-link-lib=nfnetlink");
     println!("cargo:rustc-link-lib=mnl");
     println!("cargo:rustc-link-lib=static=luajit");
+    println!("cargo:rustc-link-lib=unwind"); // for shitass luajit
 
     let _ = env::var("NETFILTER_LIBS")
         .map(|libs| println!("cargo:rustc-link-search=native={libs}/lib"));
