@@ -1,4 +1,4 @@
-use crate::{MODULE_PATH, run_nfqws};
+use crate::{MODULE_PATH, run_nfqws, run_nfqws2};
 use daemonize::Daemonize;
 use log::{error, info};
 use std::fs::File;

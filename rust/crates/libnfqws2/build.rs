@@ -15,42 +15,68 @@ rel_manifest_path!(NFQ, "zapret2/nfq2");
 rel_manifest_path!(NFQ_CRYPTO, "zapret2/nfq2/crypto");
 
 fn main() {
-    cc::Build::new()
-        .files(
-            glob::glob(&format!("{}/*.c", NFQ.display()))
-                .unwrap()
-                .filter_map(Result::ok),
-        )
-        .files(
-            glob::glob(&format!("{}/*.c", NFQ_CRYPTO.display()))
-                .unwrap()
-                .filter_map(Result::ok),
-        )
-        .include(&*NFQ)
-        .include(&*NFQ_CRYPTO)
-        .flag("-w")
-        .define("main", "nfqws2_main")
-        .define("l7proto_str", "nfq2_l7proto_str")
-        .define("l7_proto_match", "nfq2_l7_proto_match")
-        .define("posmarker_name", "nfq2_posmarker_name")
-        .define("AnyProtoPos", "nfq2_AnyProtoPos")
-        .define("ResolvePos", "nfq2_ResolvePos")
-        .define("HttpPos", "nfq2_HttpPos")
-        .define("TLSPos", "nfq2_TLSPos")
-        .define("TLSFindExt", "nfq2_TLSFindExt")
-        .define("TLSAdvanceToHostInSNI", "nfq2_TLSAdvanceToHostInSNI")
-        .define("ResolveMultiPos", "nfq2_ResolveMultiPos")
-        .define("IsHttp", "nfq2_IsHttp")
-        .define("HttpFindHost", "nfq2_HttpFindHost")
-        .define("IsHttpReply", "nfq2_IsHttpReply")
-        .define("HttpReplyCode", "nfq2_HttpReplyCode")
-        .define("HttpExtractHeader", "nfq2_HttpExtractHeader")
-        .define("HttpExtractHost", "nfq2_HttpExtractHost")
-        .define("HttpReplyLooksLikeDPIRedirect", "nfq2_HttpReplyLooksLikeDPIRedirect")
-        .define("TLSVersionStr", "nfq2_TLSVersionStr")
-        .define("TLSRecordDataLen", "nfq2_TLSRecordDataLen")
-        .define("TLSRecordLen", "nfq2_TLSRecordLen")
-        .compile("libnfqws2.a");
+    const SYMBOLS: &[&str] = &[
+        "DLOG",
+        "net32_add",
+        "net16_add",
+        "tcp_find_option",
+        "tcp_find_scale_factor",
+        "tcp_find_mss",
+        "proto_skip_ipv6",
+        "proto_check_ipv4",
+        "proto_check_ipv6",
+        "extract_ports",
+        "extract_endpoints",
+        "proto_name",
+        "family_from_proto",
+        "str_ip",
+        "print_ip",
+        "str_srcdst_ip6",
+        "str_ip6hdr",
+        "print_ip6hdr",
+        "str_tcphdr",
+        "print_tcphdr",
+        "l7proto_str",
+        "l7_proto_match",
+        "posmarker_name",
+        "AnyProtoPos",
+        "ResolvePos",
+        "HttpPos",
+        "TLSPos",
+        "TLSFindExt",
+        "TLSAdvanceToHostInSNI",
+        "ResolveMultiPos",
+        "IsHttp",
+        "HttpFindHost",
+        "IsHttpReply",
+        "HttpReplyCode",
+        "HttpExtractHeader",
+        "HttpExtractHost",
+        "HttpReplyLooksLikeDPIRedirect",
+        "TLSVersionStr",
+        "TLSRecordDataLen",
+        "TLSRecordLen",
+    ];
+    let mut cc_builder = cc::Build::new();
+    cc_builder.files(
+        glob::glob(&format!("{}/*.c", NFQ.display()))
+            .unwrap()
+            .filter_map(Result::ok),
+    );
+    cc_builder.files(
+        glob::glob(&format!("{}/*.c", NFQ_CRYPTO.display()))
+            .unwrap()
+            .filter_map(Result::ok),
+    );
+    cc_builder.include(&*NFQ);
+    cc_builder.include(&*NFQ_CRYPTO);
+    cc_builder.flag("-w");
+    for &symbol in SYMBOLS {
+        let val = format!("nfq2_{}", symbol);
+        cc_builder.define(symbol, Some(&val[..]));
+    }
+    cc_builder.define("main", "nfqws2_main");
+    cc_builder.compile("libnfqws2.a");
 
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=netfilter_queue");
