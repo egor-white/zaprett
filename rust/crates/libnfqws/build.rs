@@ -50,7 +50,6 @@ fn main() {
         .define("TLSVersionStr", "nfq_TLSVersionStr")
         .define("TLSRecordDataLen", "nfq_TLSRecordDataLen")
         .define("TLSRecordLen", "nfq_TLSRecordLen")
-        .compile("libnfqws2.a");
         .compile("libnfqws.a");
 
     println!("cargo:rustc-link-lib=z");
