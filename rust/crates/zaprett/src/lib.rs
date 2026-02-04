@@ -7,6 +7,7 @@ mod autostart;
 
 use ini::Ini;
 use libnfqws::nfqws_main;
+use libnfqws2::nfqws2_main;
 use std::error;
 use std::ffi::CString;
 use std::os::raw::c_char;
@@ -97,6 +98,34 @@ fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
 
     unsafe {
         nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
+    }
+
+    Ok(())
+}
+
+
+fn run_nfqws2(args_str: &str) -> anyhow::Result<()> {
+    let mut args = vec![
+        "nfqws".to_string(),
+        "--uid=0:0".to_string(),
+        "--qnum=200".to_string(),
+    ];
+
+    if args_str.trim().is_empty() {
+        args.push("-v".to_string());
+    } else {
+        args.extend(args_str.split_whitespace().map(String::from));
+    }
+
+    let c_args: Vec<CString> = args
+        .into_iter()
+        .map(|arg| CString::new(arg).unwrap())
+        .collect();
+
+    let mut ptrs: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
+
+    unsafe {
+        nfqws2_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
     }
 
     Ok(())

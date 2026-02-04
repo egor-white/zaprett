@@ -41,7 +41,7 @@ pub async fn daemonize_nfqws2(args: &str) {
     match daemonize.start() {
         Ok(_) => {
             info!("Success, nfqws2 daemonized");
-            run_nfqws(args).unwrap()
+            run_nfqws2(args).unwrap()
         }
         Err(e) => error!("Error while starting nfqws2 daemon: {e}"),
     }

@@ -30,6 +30,27 @@ fn main() {
         .include(&*NFQ_CRYPTO)
         .flag("-w")
         .define("main", "nfqws_main")
+        .define("l7proto_str", "nfq_l7proto_str")
+        .define("l7_proto_match", "nfq_l7_proto_match")
+        .define("posmarker_name", "nfq_posmarker_name")
+        .define("AnyProtoPos", "nfq_AnyProtoPos")
+        .define("ResolvePos", "nfq_ResolvePos")
+        .define("HttpPos", "nfq_HttpPos")
+        .define("TLSPos", "nfq_TLSPos")
+        .define("TLSFindExt", "nfq_TLSFindExt")
+        .define("TLSAdvanceToHostInSNI", "nfq_TLSAdvanceToHostInSNI")
+        .define("ResolveMultiPos", "nfq_ResolveMultiPos")
+        .define("IsHttp", "nfq_IsHttp")
+        .define("HttpFindHost", "nfq_HttpFindHost")
+        .define("IsHttpReply", "nfq_IsHttpReply")
+        .define("HttpReplyCode", "nfq_HttpReplyCode")
+        .define("HttpExtractHeader", "nfq_HttpExtractHeader")
+        .define("HttpExtractHost", "nfq_HttpExtractHost")
+        .define("HttpReplyLooksLikeDPIRedirect", "nfq_HttpReplyLooksLikeDPIRedirect")
+        .define("TLSVersionStr", "nfq_TLSVersionStr")
+        .define("TLSRecordDataLen", "nfq_TLSRecordDataLen")
+        .define("TLSRecordLen", "nfq_TLSRecordLen")
+        .compile("libnfqws2.a");
         .compile("libnfqws.a");
 
     println!("cargo:rustc-link-lib=z");
