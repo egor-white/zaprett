@@ -56,6 +56,26 @@ fn main() {
         "TLSVersionStr",
         "TLSRecordDataLen",
         "TLSRecordLen",
+        "DLOG_CONDUP",
+        "IsTLSRecordFull",
+        "DLOG_ERR",
+        "IsTLSClientHello",
+        "DLOG_PERROR",
+        "LOG_APPEND"
+        "HOSTLIST_DEBUGLOG_APPEND",
+        "hexdump_limited_dlog",
+        "TLSHandshakeLen",
+        "IsTLSHandshakeClientHello",
+        "IsTLSHandshakeFull",
+        "TLSFindExtLenOffsetInHandshake",
+        "TLSFindExtLen",
+        "TLSFindExtInHandshake",
+        "TLSHelloExtractHost",
+        "TLSHelloExtractHostFromHandshake",
+        "IsQUICCryptoHello",
+        "QUICDraftVersion",
+        "str_udphdr",
+        "QUICIsLongHeader",
     ];
     let mut cc_builder = cc::Build::new();
     cc_builder.files(
