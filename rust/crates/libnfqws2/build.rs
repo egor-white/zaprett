@@ -231,10 +231,10 @@ fn main() {
     {
         builder = builder.header(header.to_string_lossy());
     }
+    builder = builder.clang_arg("-Dmain=nfqws2_main");
+
     if let Ok(luajit) = env::var("LUAJIT") {
-        builder = builder
-            .clang_arg(format!("-I{}", luajit))
-            .clang_arg("-Dmain=nfqws2_main");
+        builder = builder.clang_arg(format!("-I{}", luajit));
     }
 
     let bindings = builder
