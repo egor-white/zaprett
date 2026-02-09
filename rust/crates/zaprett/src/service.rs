@@ -58,9 +58,10 @@ pub async fn start_service() -> anyhow::Result<()> {
         .map(Cow::Owned)
         .unwrap_or(Cow::Borrowed(DEFAULT_STRATEGY_NFQWS));
 
-    let regex_hostlist = Regex::new(r"\$hostlist")?;
-    let regex_ipsets = Regex::new(r"\$ipset")?;
-    let regex_zaprettdir = Regex::new(r"\$\{?zaprettdir}?")?;
+    let regex_hostlist = Regex::new(r"\$(?:hostlist|\{hostlist})")?;
+    let regex_ipsets = Regex::new(r"\$(?:ipset|\{ipset})")?;
+    let regex_zaprettdir = Regex::new(r"\$(?:zaprettdir|\{zaprettdir})")?;
+    let regex_libsdir = Regex::new(r"\$(?:hostlist|\{hostlist})")?;
 
     let mut strat_modified;
     let (hosts, ipsets) = config.list_type().merge(&config).await;
