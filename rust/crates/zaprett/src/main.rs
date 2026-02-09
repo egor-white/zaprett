@@ -8,7 +8,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = CliApp::parse();
     match cli.cmd() {
         Some(cmd) => cmd.exec().await?,
-        None => println!("zaprett installed. Join us: t.me/zaprett_module"),
+        None => println!("zaprett installed. Join us in Telegram: t.me/zaprett_module"),
     }
 
     Ok(())
