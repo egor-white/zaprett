@@ -10,17 +10,36 @@ pub enum ListType {
     Blacklist,
 }
 
+#[derive(Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ServiceType {
+    #[default]
+    Nfqws,
+    Nfqws2,
+}
+
+#[derive(Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ApplistType {
+    #[default]
+    None,
+    Blacklist,
+    Whitelist,
+}
+
 #[derive(Default, Serialize, Deserialize, Getters)]
 #[getset(get = "pub")]
 #[serde(default)]
 pub struct Config {
+    service_type: ServiceType,
     active_lists: Vec<String>,
     active_ipsets: Vec<String>,
     active_exclude_lists: Vec<String>,
     active_exclude_ipsets: Vec<String>,
     list_type: ListType,
     strategy: String,
-    app_list: String,
+    strategy_nfqws2: String,
+    app_list: ApplistType,
     whitelist: Vec<String>,
     blacklist: Vec<String>,
 }

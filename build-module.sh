@@ -10,10 +10,14 @@ echo "Make build dirs"
 mkdir -p zaprett/system/bin
 mkdir -p zaprett/zaprett/bin
 mkdir -p zaprett/zaprett/lists/include
+mkdir -p zaprett/zaprett/lists/exclude
+mkdir -p zaprett/zaprett/strategies/nfqws2/libs
 mkdir -p zaprett-hosts/system/bin
 mkdir -p zaprett-hosts/system/etc
 mkdir -p zaprett-hosts/zaprett/bin
 mkdir -p zaprett-hosts/zaprett/lists/include
+mkdir -p zaprett-hosts/zaprett/lists/exclude
+mkdir -p zaprett/zaprett/strategies/nfqws2/libs
 mkdir -p out lists
 
 echo "Copy files to dirs"

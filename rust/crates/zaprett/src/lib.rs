@@ -24,6 +24,9 @@ pub static MODULE_PATH: LazyLock<&Path> =
 pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
     LazyLock::new(|| Path::new("/storage/emulated/0/zaprett"));
 
+pub static ZAPRETT_LIBS_PATH: LazyLock<&Path> =
+    LazyLock::new(|| Path::new("/storage/emulated/0/zaprett/strategies/nfwqs2/libs"));
+
 pub static DEFAULT_STRATEGY_NFQWS: &str = "
         --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new
         --filter-tcp=443 $hostlist --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new
@@ -31,6 +34,10 @@ pub static DEFAULT_STRATEGY_NFQWS: &str = "
         --filter-udp=50000-50100 --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-fake-quic=0xC30000000108 --new
         --filter-udp=443 $hostlist --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new
         --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist
+        ";
+
+pub static DEFAULT_STRATEGY_NFQWS2: &str = "
+        /// я всё ещё жду стратегию под nfqws2
         ";
 
 async fn module_version() -> anyhow::Result<String> {

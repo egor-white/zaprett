@@ -1,7 +1,6 @@
 use once_cell::sync::Lazy;
 use std::env;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 macro_rules! rel_manifest_path {
     ($name:ident, $path:expr) => {
