@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
-: "${module_version:?module_version is not set}"
-: "${module_version_code:?module_version_code is not set}"
+: "${MODULE_VERSION:?MODULE_VERSION is not set}"
+: "${MODULE_VERSION_CODE:?MODULE_VERSION_CODE is not set}"
 
 echo "Build zaprett binaries"
 just -f rust/justfile build-android --release
@@ -38,8 +38,8 @@ echo "Create module.prop"
 cat > zaprett/module.prop <<EOF
 id=zaprett
 name=zaprett
-version=$module_version
-versionCode=$module_version_code
+version=$MODULE_VERSION
+versionCode=$MODULE_VERSION_CODE
 author=egor-white, Cherret
 description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
 updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update.json
@@ -48,8 +48,8 @@ EOF
 cat > zaprett-hosts/module.prop <<EOF
 id=zaprett
 name=zaprett-hosts
-version=$module_version
-versionCode=$module_version_code
+version=$MODULE_VERSION
+versionCode=$MODULE_VERSION_CODE
 author=egor-white, Cherret
 description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
 updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-hosts.json
