@@ -5,7 +5,6 @@ pub mod iptables_rust;
 mod service;
 mod autostart;
 
-use ini::Ini;
 use libnfqws::nfqws_main;
 use libnfqws2::nfqws2_main;
 use std::error;
@@ -13,10 +12,8 @@ use std::ffi::CString;
 use std::os::raw::c_char;
 use std::path::Path;
 use std::sync::LazyLock;
-use anyhow::bail;
 use tokio::fs::File;
 use tokio::io::{copy, AsyncWriteExt};
-use tokio::task::spawn_blocking;
 
 #[cfg(target_os = "android")]
 pub static MODULE_PATH: LazyLock<&Path> =
@@ -41,16 +38,24 @@ pub static ZAPRETT_LIBS_PATH: LazyLock<&Path> =
 
 
 pub static DEFAULT_STRATEGY_NFQWS: &str = "
-        --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new
-        --filter-tcp=443 $hostlist --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new
-        --filter-tcp=80,443 --dpi-desync=fake,disorder2 --dpi-desync-repeats=6 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new
+        --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum ${hostlist} --new
+        --filter-tcp=443 ${hostlist} --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new
+        --filter-tcp=80,443 --dpi-desync=fake,disorder2 --dpi-desync-repeats=6 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum ${hostlist} --new
         --filter-udp=50000-50100 --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-fake-quic=0xC30000000108 --new
-        --filter-udp=443 $hostlist --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new
-        --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 $hostlist
+        --filter-udp=443 ${hostlist} --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new
+        --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 ${hostlist}
         ";
 
-pub static DEFAULT_STRATEGY_NFQWS2: &str = "
-        /// я всё ещё жду стратегию под nfqws2
+pub static DEFAULT_STRATEGY_NFQWS2: &str = " // тестовая стратегия, заменить на нормальную потом
+        --lua-init=@${libsdir}/zapret-lib.lua --lua-init=@${libsdir}/zapret-antidpi.lua
+        --blob=quic_google:@${zaprettdir}/bin/quic_initial_www_google_com.bin
+        --blob=tls_google:${zaprettdir}/bin/tls_clienthello_www_google_com.bin
+        --blob=tls_4pda:@${zaprettdir}/bin/tls_clienthello_4pda_to.bin
+        --blob=tls_max:@${zaprettdir}/bin/tls_clienthello_max_ru.bin
+        --blob=zero4:0x00000000
+        --filter-udp=443 --hostlist=${zaprettdir}/lists/include/list-general.txt --lua-desync=fake:blob=quic_google:repeats=6 --new
+        --filter-tcp=443 --hostlist=${zaprettdir}/lists/include/list-google.txt --lua-desync=fake:blob=tls_google:repeats=6:tcp_seq=2:tls_mod=none:ip_id=zero --new
+        --filter-tcp=80,443 --hostlist=${zaprettdir}/lists/include/list-general.txt --lua-desync=fake:blob=tls_google:repeats=6:tcp_seq=2:tls_mod=none
         ";
 
 fn nfqws_version() -> &'static str {
