@@ -5,7 +5,7 @@ use commands::Command;
 use getset::Getters;
 
 #[derive(Parser, Getters)]
-#[command(version)]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 #[getset(get = "pub")]
 pub struct CliApp {
     #[command(subcommand)]
