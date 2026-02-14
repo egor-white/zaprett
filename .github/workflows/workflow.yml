@@ -11,8 +11,12 @@ on:
         description: "Tag for the release (x.x.x)"
         required: true
         type: string
-      zapret-version:
-        description: "Zapret version (x.x)"
+      nfqws-version:
+        description: "Nfqws version (x.x)"
+        required: true
+        type: string
+      nfqws2-version:
+        description: "Nfqws2 version (x.x)"
         required: true
         type: string
       version:
@@ -36,9 +40,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ZAPRET_VERSION: ${{ inputs.zapret-version }}
-      module_version: ${{ inputs.version }}
-      module_version_code: ${{ inputs.version_code }}
+      NFQWS_VERSION: ${{ inputs.nfqws-version }}
+      NFQWS2_VERSION: ${{ inputs.nfqws2-version }}
+      MODULE_VERSION: ${{ inputs.version }}
+      MODULE_VERSION_CODE: ${{ inputs.version_code }}
     steps:
       - uses: actions/checkout@v4
 
