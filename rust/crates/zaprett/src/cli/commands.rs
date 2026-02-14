@@ -1,6 +1,6 @@
 use crate::autostart::{get_autostart, set_autostart};
 use crate::service::{restart_service, service_status, start_service, stop_service};
-use crate::{bin_version, module_version, run_nfqws};
+use crate::{nfqws_version, nfqws2_version, run_nfqws};
 use clap::Subcommand;
 
 #[derive(Subcommand)]
@@ -55,7 +55,7 @@ impl Command {
             Command::SetAutostart => set_autostart().await?,
             Command::GetAutostart => println!("{}", get_autostart()),
             Command::NfqwsVersion => println!("{}", nfqws_version()),
-            Command::Nfqws2Version => println!("{}", nfqws2_version())
+            Command::Nfqws2Version => println!("{}", nfqws2_version()),
             Command::Run { args } => run_nfqws(&args.join(" "))?,
         }
 
