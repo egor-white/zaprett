@@ -55,7 +55,7 @@ impl Command {
             Command::SetAutostart => set_autostart().await?,
             Command::GetAutostart => println!("{}", get_autostart()),
             Command::NfqwsVersion => println!("{}", nfqws_version()),
-            Command::Nfqws2Version => println!("{}", nfqws2_version())
+            Command::Nfqws2Version => println!("{}", nfqws2_version()),
             Command::Run { args } => run_nfqws(&args.join(" "))?,
         }
 
