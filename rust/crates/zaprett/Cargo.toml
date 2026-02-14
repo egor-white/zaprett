@@ -9,7 +9,6 @@ anyhow = { workspace = true }
 clap = { workspace = true }
 libc = { workspace = true }
 regex = { workspace = true }
-rust-ini = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sysctl ={ workspace = true }
