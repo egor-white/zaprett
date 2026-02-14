@@ -45,8 +45,8 @@ pub static DEFAULT_STRATEGY_NFQWS: &str = "
         --filter-udp=443 ${hostlist} --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new
         --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 ${hostlist}
         ";
-
-pub static DEFAULT_STRATEGY_NFQWS2: &str = " // тестовая стратегия, заменить на нормальную потом
+// тестовая стратегия, заменить на нормальную потом
+pub static DEFAULT_STRATEGY_NFQWS2: &str = "
         --lua-init=@${libsdir}/zapret-lib.lua --lua-init=@${libsdir}/zapret-antidpi.lua
         --blob=quic_google:@${zaprettdir}/bin/quic_initial_www_google_com.bin
         --blob=tls_google:${zaprettdir}/bin/tls_clienthello_www_google_com.bin
