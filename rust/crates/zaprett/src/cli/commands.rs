@@ -1,6 +1,6 @@
 use crate::autostart::{get_autostart, set_autostart};
 use crate::service::{restart_service, service_status, start_service, stop_service};
-use crate::{nfqws_version, nfwqs2_version, run_nfqws};
+use crate::{nfqws_version, nfqws2_version, run_nfqws};
 use clap::Subcommand;
 
 #[derive(Subcommand)]
