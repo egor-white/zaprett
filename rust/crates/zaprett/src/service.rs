@@ -73,7 +73,7 @@ pub async fn start_service() -> anyhow::Result<()> {
     let regex_hostlist = Regex::new(r"\$(?:hostlist|\{hostlist})")?;
     let regex_ipsets = Regex::new(r"\$(?:ipset|\{ipset})")?;
     let regex_zaprettdir = Regex::new(r"\$(?:zaprettdir|\{zaprettdir})")?;
-    let regex_libsdir = Regex::new(r"\$(?:hostlist|\{hostlist})")?;
+    let regex_libsdir = Regex::new(r"\$(?:libsdir|\{libsdir})")?;
 
     let mut strat_modified;
     let (hosts, ipsets) = config.list_type().merge(&config).await;
