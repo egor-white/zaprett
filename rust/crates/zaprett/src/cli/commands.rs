@@ -23,14 +23,14 @@ pub enum Command {
     /// Show whether autostart is enabled
     GetAutostart,
 
-    /// Show the module version
-    ModuleVersion,
+    /// Show the nfqws version
+    NfqwsVersion,
 
-    /// Show the nfqws binary version
-    BinaryVersion,
+    /// Show the nfqws2 version
+    Nfqws2Version,
 
     /// Run nfqws
-    Args {
+    Run {
         #[arg(allow_hyphen_values=true, trailing_var_arg = true, num_args = 0..)]
         args: Vec<String>,
     },
@@ -54,9 +54,9 @@ impl Command {
             }
             Command::SetAutostart => set_autostart().await?,
             Command::GetAutostart => println!("{}", get_autostart()),
-            Command::ModuleVersion => println!("{}", module_version().await?),
-            Command::BinaryVersion => println!("{}", bin_version()),
-            Command::Args { args } => run_nfqws(&args.join(" "))?,
+            Command::NfqwsVersion => println!("{}", nfqws_version()),
+            Command::Nfqws2Version => println!("{}", nfqws2_version())
+            Command::Run { args } => run_nfqws(&args.join(" "))?,
         }
 
         Ok(())

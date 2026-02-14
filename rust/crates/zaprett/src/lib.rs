@@ -53,21 +53,12 @@ pub static DEFAULT_STRATEGY_NFQWS2: &str = "
         /// я всё ещё жду стратегию под nfqws2
         ";
 
-async fn module_version() -> anyhow::Result<String> {
-    let prop = spawn_blocking(|| Ini::load_from_file(MODULE_PATH.join("module.prop")))
-        .await??;
-
-    if let Some(props) = prop.section::<String>(None)
-        && let Some(version) = props.get("version")
-    {
-        return Ok(version.into());
-    }
-
-    bail!("Failed to get version, prop not found")
+fn nfqws_version() -> &'static str {
+    env!("NFQWS_VERSION")
 }
 
-fn bin_version() -> &'static str {
-    env!("ZAPRET_VERSION")
+fn nfqws2_version() -> &'static str {
+    env!("NFQWS2_VERSION")
 }
 
 pub async fn merge_files(
