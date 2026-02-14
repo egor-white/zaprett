@@ -18,14 +18,27 @@ use tokio::fs::File;
 use tokio::io::{copy, AsyncWriteExt};
 use tokio::task::spawn_blocking;
 
+#[cfg(target_os = "android")]
 pub static MODULE_PATH: LazyLock<&Path> =
     LazyLock::new(|| Path::new("/data/adb/modules/zaprett"));
-
+#[cfg(target_os = "android")]
 pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
     LazyLock::new(|| Path::new("/storage/emulated/0/zaprett"));
-
+#[cfg(target_os = "android")]
 pub static ZAPRETT_LIBS_PATH: LazyLock<&Path> =
     LazyLock::new(|| Path::new("/storage/emulated/0/zaprett/strategies/nfwqs2/libs"));
+
+// Only for testing
+#[cfg(target_os = "linux")]
+pub static MODULE_PATH: LazyLock<&Path> =
+    LazyLock::new(|| Path::new("zaprett_module"));
+#[cfg(target_os = "linux")]
+pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
+    LazyLock::new(|| Path::new("zaprett"));
+#[cfg(target_os = "linux")]
+pub static ZAPRETT_LIBS_PATH: LazyLock<&Path> =
+    LazyLock::new(|| Path::new("zaprett/strategies/nfwqs2/libs"));
+
 
 pub static DEFAULT_STRATEGY_NFQWS: &str = "
         --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum $hostlist --new
