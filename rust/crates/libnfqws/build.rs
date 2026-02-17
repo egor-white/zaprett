@@ -159,6 +159,8 @@ fn main() {
         "print_cidr6",
         "parse_cidr4",
         "parse_cidr6",
+        "config_from_file",
+        "cleanup_args",
     ];
     let mut cc_builder = cc::Build::new();
     cc_builder.files(
