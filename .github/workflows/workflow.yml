@@ -51,45 +51,6 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Install dependencies
-        run: sudo apt install build-essential pkg-config just unzip
-
-      - name: Build zaprett
-        run: just -f rust/justfile build-android --release
-
-      - name: Make build dirs
-        run: |
-          mkdir -p zaprett/system/bin
-          mkdir -p zaprett/zaprett/bin
-          mkdir -p zaprett/zaprett/lists/include
-
-          mkdir -p zaprett-hosts/system/bin
-          mkdir -p zaprett-hosts/system/etc
-          mkdir -p zaprett-hosts/zaprett/bin
-          mkdir -p zaprett-hosts/zaprett/lists/include
-
-          mkdir -p out lists
-
-      - name: Copy files to dirs
-        run: |
-          cp rust/target/armv7-linux-androideabi/release/zaprett zaprett/system/bin/zaprett-armv7
-          cp rust/target/aarch64-linux-android/release/zaprett zaprett/system/bin/zaprett-aarch64
-          cp rust/target/x86_64-linux-android/release/zaprett zaprett/system/bin/zaprett-x86_64
-
-          cp -a src/* zaprett/
-          cp -r zaprett/* zaprett-hosts/
-
-      - name: Download and copy actual lists
-        run: |
-          wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-youtube.txt -O lists/list-youtube.txt
-          wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-discord.txt -O lists/list-discord.txt
-
-          cp lists/* zaprett/zaprett/lists/include
-
-          cp lists/* zaprett-hosts/zaprett/lists/include
-
-          cp hosts/hosts zaprett-hosts/system/etc
-
-      - name: Create module.prop
         run: |
           sudo dpkg --add-architecture i386
           sudo apt update
@@ -164,3 +125,4 @@ jobs:
             -d parse_mode=HTML \
             -d disable_web_page_preview=true \
             --data-urlencode "text=$MESSAGE_TEXT"
+
