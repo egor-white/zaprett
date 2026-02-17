@@ -6,6 +6,7 @@ export ANDROID_NDK_VERSION := "r27d-linux"
 TARGET := `pwd` + "/target"
 
 export NETFILTER_LIBS := TARGET + "/netfilter"
+export LUAJIT_LIBS := TARGET + "/luajit"
 
 export NDK_HOME := TARGET + "/android-ndk-" + ANDROID_NDK_VERSION
 
@@ -76,7 +77,44 @@ _build_netfilter_libs target_arch:
         echo "Netfilter libs for {{target_arch}} already built"
     fi
 
-_instal_rust_target target:
+_build_luajit target_arch:
+    #!/usr/bin/env bash
+
+    if [ ! -d "{{LUAJIT_LIBS}}-{{target_arch}}" ]; then
+        cd "{{TARGET}}"
+
+        if [ ! -d "luajit2-*" ]; then
+            wget -qO- https://github.com/openresty/luajit2/archive/refs/tags/v2.1-20250826.tar.gz | tar -xz
+        fi
+
+        export TOOLCHAIN=$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64
+        export CC="$TOOLCHAIN/bin/clang --target={{target_arch}}$ANDROID_API"
+        export AR=$TOOLCHAIN/bin/llvm-ar
+        export STRIP=$TOOLCHAIN/bin/llvm-strip
+
+        case "{{target_arch}}" in
+          *64*) HOSTCC="cc" ;;
+          *)    HOSTCC="cc -m32" ;;
+        esac
+
+        (
+          cd luajit2-*
+          make clean
+          make BUILDMODE=static XCFLAGS=-DLUAJIT_DISABLE_FFI \
+               HOST_CC="$HOSTCC" CROSS= CC="$CC" \
+               TARGET_AR="$AR rcus" TARGET_STRIP=$STRIP \
+               CFLAGS="-Os -flto=auto" -j$(nproc)
+
+          make install PREFIX= DESTDIR="{{LUAJIT_LIBS}}-{{target_arch}}"
+          mv "{{LUAJIT_LIBS}}-{{target_arch}}/lib/libluajit-5.1.a" \
+             "{{LUAJIT_LIBS}}-{{target_arch}}/lib/libluajit.a"
+        )
+    else
+        echo "LuaJIT for {{target_arch}} already built"
+    fi
+
+
+_install_rust_target target:
     #!/usr/bin/env bash
     if ! rustup target list --installed | grep -q "{{target}}"; then
         echo "Installing missing target: {{target}}"
@@ -98,12 +136,18 @@ build-android *args: prepare-android
         t=${targets[$i]}
         (
             echo "Building target $t"
-            export CFLAGS="-I$NETFILTER_LIBS-$t/include"
-            export LDFLAGS="-L$NETFILTER_LIBS-$t/lib"
+            export CFLAGS="-I$NETFILTER_LIBS-$t/include -I$LUAJIT_LIBS-$t/include/luajit-2.1"
+            export LDFLAGS="-L$NETFILTER_LIBS-$t/lib -L$LUAJIT_LIBS-$t/lib"
             export CXXFLAGS="$CFLAGS"
 
+            export LUAJIT="$LUAJIT_LIBS-$t/include/luajit-2.1"
+            export LJIT=1
+            export LCFLAGS="-I$LUAJIT_LIBS-$t/include/luajit-2.1"
+            export LLIB="-L$LUAJIT_LIBS-$t/lib -lluajit-2.1"
+
             just _build_netfilter_libs $t
-            just _instal_rust_target $t
-            NETFILTER_LIBS=$NETFILTER_LIBS-$t cargo ndk -t $t --platform $ANDROID_API build {{args}}
+            just _build_luajit $t
+            just _install_rust_target $t
+            NETFILTER_LIBS=$NETFILTER_LIBS-$t LUAJIT_LIBS=$LUAJIT_LIBS-$t cargo ndk -t $t --platform $ANDROID_API build {{args}}
         )
     done

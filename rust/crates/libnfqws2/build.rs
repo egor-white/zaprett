@@ -11,8 +11,8 @@ macro_rules! rel_manifest_path {
     };
 }
 
-rel_manifest_path!(NFQ, "zapret/nfq");
-rel_manifest_path!(NFQ_CRYPTO, "zapret/nfq/crypto");
+rel_manifest_path!(NFQ, "zapret2/nfq2");
+rel_manifest_path!(NFQ_CRYPTO, "zapret2/nfq2/crypto");
 
 fn main() {
     const SYMBOLS: &[&str] = &[
@@ -175,21 +175,49 @@ fn main() {
     cc_builder.include(&*NFQ_CRYPTO);
     cc_builder.flag("-w");
     for &symbol in SYMBOLS {
-        let val = format!("nfq_{}", symbol);
+        let val = format!("nfq2_{}", symbol);
         cc_builder.define(symbol, Some(&val[..]));
     }
-    cc_builder.define("main", "nfqws_main");
-    cc_builder.compile("libnfqws.a");
+    cc_builder.define("main", "nfqws2_main");
+    cc_builder.compile("libnfqws2.a");
+
+    let compiler = cc_builder.get_compiler();
+    let output = compiler.to_command()
+        .arg("-print-libgcc-file-name")
+        .output()
+        .expect("Failed to query compiler for libgcc path");
+
+    let path_str = String::from_utf8(output.stdout).unwrap();
+    let lib_path = Path::new(path_str.trim());
+
+    if lib_path.exists() {
+        if let Some(parent) = lib_path.parent() {
+            println!("cargo:rustc-link-search=native={}", parent.display());
+        }
+
+        if let Some(stem) = lib_path.file_stem() {
+            let lib_name = stem.to_string_lossy();
+            let lib_name = lib_name.strip_prefix("lib").unwrap_or(&lib_name);
+            println!("cargo:rustc-link-lib=static={}", lib_name);
+        }
+    } else {
+        println!("cargo:warning=Could not find compiler builtins library at {:?}", lib_path);
+        println!("cargo:rustc-link-lib=gcc");
+    }
 
     println!("cargo:rustc-link-lib=z");
     println!("cargo:rustc-link-lib=netfilter_queue");
     println!("cargo:rustc-link-lib=nfnetlink");
     println!("cargo:rustc-link-lib=mnl");
+    println!("cargo:rustc-link-lib=static=luajit");
+    println!("cargo:rustc-link-lib=unwind"); // for shitass luajit
 
     let _ = env::var("NETFILTER_LIBS")
         .map(|libs| println!("cargo:rustc-link-search=native={libs}/lib"));
+    let _ = env::var("LUAJIT_LIBS")
+        .map(|libs| println!("cargo:rustc-link-search=native={libs}/lib"));
 
-    println!("cargo:rustc-link-lib=static=nfqws");
+    println!("cargo:rustc-link-lib=static=nfqws2");
     println!("cargo:rerun-if-changed={}", NFQ.display());
     println!("cargo:rerun-if-changed={}", NFQ_CRYPTO.display());
     println!("cargo:rerun-if-changed=build.rs");
@@ -202,16 +230,19 @@ fn main() {
     {
         builder = builder.header(header.to_string_lossy());
     }
+    builder = builder.clang_arg("-Dmain=nfqws2_main");
 
-    builder = builder.clang_arg("-Dmain=nfqws_main");
+    if let Ok(luajit) = env::var("LUAJIT") {
+        builder = builder.clang_arg(format!("-I{}", luajit));
+    }
 
     let bindings = builder
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
-        .expect("Unable to generate libnfqws");
+        .expect("Unable to generate libnfqws2");
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
-        .write_to_file(out_path.join("libnfqws.rs"))
-        .expect("Couldn't write libnfqws");
+        .write_to_file(out_path.join("libnfqws2.rs"))
+        .expect("Couldn't write libnfqws2");
 }

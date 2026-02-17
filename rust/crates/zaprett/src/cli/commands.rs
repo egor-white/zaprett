@@ -1,8 +1,7 @@
 use crate::autostart::{get_autostart, set_autostart};
 use crate::service::{restart_service, service_status, start_service, stop_service};
-use crate::{bin_version, module_version, run_nfqws};
+use crate::{nfqws_version, nfqws2_version, run_nfqws};
 use clap::Subcommand;
-use log::error;
 
 #[derive(Subcommand)]
 pub enum Command {
@@ -24,14 +23,14 @@ pub enum Command {
     /// Show whether autostart is enabled
     GetAutostart,
 
-    /// Show the module version
-    ModuleVersion,
+    /// Show the nfqws version
+    NfqwsVersion,
 
-    /// Show the nfqws binary version
-    BinaryVersion,
+    /// Show the nfqws2 version
+    Nfqws2Version,
 
     /// Run nfqws
-    Args {
+    Run {
         #[arg(allow_hyphen_values=true, trailing_var_arg = true, num_args = 0..)]
         args: Vec<String>,
     },
@@ -40,11 +39,9 @@ pub enum Command {
 impl Command {
     pub async fn exec(&self) -> anyhow::Result<()> {
         match self {
-            Command::Start => return start_service().await,
-            Command::Stop => {
-                let _ = stop_service().await;
-            }
-            Command::Restart => return restart_service().await,
+            Command::Start => start_service().await?,
+            Command::Stop => stop_service().await?,
+            Command::Restart => restart_service().await?,
             Command::Status => {
                 println!(
                     "zaprett is {}",
@@ -55,15 +52,11 @@ impl Command {
                     }
                 );
             }
-            Command::SetAutostart => {
-                if let Err(err) = set_autostart().await {
-                    error!("Failed to set auto start: {err}")
-                }
-            }
+            Command::SetAutostart => set_autostart().await?,
             Command::GetAutostart => println!("{}", get_autostart()),
-            Command::ModuleVersion => println!("{}", module_version().await?),
-            Command::BinaryVersion => println!("{}", bin_version()),
-            Command::Args { args } => run_nfqws(&args.join(" "))?,
+            Command::NfqwsVersion => println!("{}", nfqws_version()),
+            Command::Nfqws2Version => println!("{}", nfqws2_version()),
+            Command::Run { args } => run_nfqws(&args.join(" "))?,
         }
 
         Ok(())

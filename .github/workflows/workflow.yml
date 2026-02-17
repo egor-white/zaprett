@@ -11,8 +11,12 @@ on:
         description: "Tag for the release (x.x.x)"
         required: true
         type: string
-      zapret-version:
-        description: "Zapret version (x.x)"
+      nfqws-version:
+        description: "Nfqws version (x.x)"
+        required: true
+        type: string
+      nfqws2-version:
+        description: "Nfqws2 version (x.x)"
         required: true
         type: string
       version:
@@ -36,7 +40,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ZAPRET_VERSION: ${{ inputs.zapret-version }}
+      NFQWS_VERSION: ${{ inputs.nfqws-version }}
+      NFQWS2_VERSION: ${{ inputs.nfqws2-version }}
+      MODULE_VERSION: ${{ inputs.version }}
+      MODULE_VERSION_CODE: ${{ inputs.version_code }}
     steps:
       - uses: actions/checkout@v4
 
@@ -84,33 +91,15 @@ jobs:
 
       - name: Create module.prop
         run: |
-          cat > zaprett/module.prop <<EOF
-          id=zaprett
-          name=zaprett
-          version=${{ inputs.version }}
-          versionCode=${{ inputs.version_code }}
-          author=egor-white, Cherret
-          description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
-          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update.json
-          EOF
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y build-essential pkg-config just unzip libc6-dev-i386 gcc-multilib
 
-          cat > zaprett-hosts/module.prop <<EOF
-          id=zaprett
-          name=zaprett-hosts
-          version=${{ inputs.version }}
-          versionCode=${{ inputs.version_code }}
-          author=egor-white, Cherret
-          description=Ускорение CDN серверов Google. ТГК: https://t.me/zaprett_module
-          updateJson=https://raw.githubusercontent.com/egor-white/zaprett/refs/heads/main/update-hosts.json
-          EOF
+      - name: Make executable
+        run: chmod +x build-module.sh
 
-      - name: Create archives
-        run: |
-          cd zaprett && zip -r ../zaprett.zip ./* && cd ..
-          cd zaprett-hosts && zip -r ../zaprett-hosts.zip ./* && cd ..
-
-          mv zaprett.zip out/
-          mv zaprett-hosts.zip out/
+      - name: Build module
+        run: ./build-module.sh
 
       - name: Create release
         if: ${{ inputs.create_release == 'true' }}

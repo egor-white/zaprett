@@ -1,7 +1,8 @@
-use crate::config::Config;
+use crate::config::{Config, ServiceType};
 use crate::daemon::daemonize_nfqws;
+use crate::daemon::daemonize_nfqws2;
 use crate::iptables_rust::{clear_iptables_rules, setup_iptables_rules};
-use crate::{DEFAULT_START, MODULE_PATH, ZAPRETT_DIR_PATH};
+use crate::{DEFAULT_STRATEGY_NFQWS, DEFAULT_STRATEGY_NFQWS2, MODULE_PATH, ZAPRETT_DIR_PATH, ZAPRETT_LIBS_PATH};
 use anyhow::bail;
 use log::info;
 use nix::sys::signal::{Signal, kill};
@@ -53,14 +54,26 @@ pub async fn start_service() -> anyhow::Result<()> {
 
     let config: Config = serde_json::from_str(&config_contents)?;
 
-    let start = fs::read_to_string(config.strategy())
-        .await
-        .map(Cow::Owned)
-        .unwrap_or(Cow::Borrowed(DEFAULT_START));
+    let start: Cow<str> = if config.service_type() == &ServiceType::Nfqws {
+        fs::read_to_string(config.strategy())
+            .await
+            .map(Cow::Owned)
+            .unwrap_or(Cow::Borrowed(DEFAULT_STRATEGY_NFQWS))
+    }
+    else if config.service_type() == &ServiceType::Nfqws2 {
+        fs::read_to_string(config.strategy_nfqws2())
+            .await
+            .map(Cow::Owned)
+            .unwrap_or(Cow::Borrowed(DEFAULT_STRATEGY_NFQWS2))
+    }
+    else {
+        bail!("Broken config file!");
+    };
 
-    let regex_hostlist = Regex::new(r"\$hostlist")?;
-    let regex_ipsets = Regex::new(r"\$ipset")?;
-    let regex_zaprettdir = Regex::new(r"\$\{?zaprettdir}?")?;
+    let regex_hostlist = Regex::new(r"\$(?:hostlist|\{hostlist})")?;
+    let regex_ipsets = Regex::new(r"\$(?:ipset|\{ipset})")?;
+    let regex_zaprettdir = Regex::new(r"\$(?:zaprettdir|\{zaprettdir})")?;
+    let regex_libsdir = Regex::new(r"\$(?:libsdir|\{libsdir})")?;
 
     let mut strat_modified;
     let (hosts, ipsets) = config.list_type().merge(&config).await;
@@ -74,12 +87,25 @@ pub async fn start_service() -> anyhow::Result<()> {
         .replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap())
         .into_owned();
 
+    strat_modified = regex_libsdir
+        .replace_all(&strat_modified, ZAPRETT_LIBS_PATH.to_str().unwrap())
+        .into_owned();
+
     let ctl = Ctl::new("net.netfilter.nf_conntrack_tcp_be_liberal")?;
     ctl.set_value(CtlValue::String("1".into()))?;
 
     setup_iptables_rules().expect("setup iptables rules");
 
-    daemonize_nfqws(&strat_modified).await;
+    if config.service_type() == &ServiceType::Nfqws {
+        daemonize_nfqws(&strat_modified).await;
+    }
+    else if config.service_type() == &ServiceType::Nfqws2 {
+        daemonize_nfqws2(&strat_modified).await;
+    }
+    else {
+        bail!("Broken config file!");
+    }
+
     println!("zaprett service started!");
     Ok(())
 }
