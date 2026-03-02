@@ -1,6 +1,6 @@
-use crate::MODULE_PATH;
 use tokio::fs;
 use tokio::fs::File;
+use crate::path::path::MODULE_PATH;
 
 pub async fn set_autostart() -> Result<(), anyhow::Error> {
     let autostart_path = MODULE_PATH.join("autostart");
@@ -17,5 +17,5 @@ pub async fn set_autostart() -> Result<(), anyhow::Error> {
 }
 
 pub fn get_autostart() -> bool {
-    return MODULE_PATH.join("autostart").exists();
+    MODULE_PATH.join("autostart").exists()
 }

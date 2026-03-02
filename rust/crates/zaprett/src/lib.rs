@@ -4,37 +4,18 @@ mod daemon;
 pub mod iptables_rust;
 mod service;
 mod autostart;
+mod path;
 
+use crate::config::Manifest;
+use anyhow::{anyhow, Context};
 use libnfqws::nfqws_main;
 use libnfqws2::nfqws2_main;
-use std::error;
 use std::ffi::CString;
+use std::fs;
 use std::os::raw::c_char;
 use std::path::Path;
-use std::sync::LazyLock;
 use tokio::fs::File;
 use tokio::io::{copy, AsyncWriteExt};
-
-#[cfg(target_os = "android")]
-pub static MODULE_PATH: LazyLock<&Path> =
-    LazyLock::new(|| Path::new("/data/adb/modules/zaprett"));
-#[cfg(target_os = "android")]
-pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
-    LazyLock::new(|| Path::new("/storage/emulated/0/zaprett"));
-#[cfg(target_os = "android")]
-pub static ZAPRETT_LIBS_PATH: LazyLock<&Path> =
-    LazyLock::new(|| Path::new("/storage/emulated/0/zaprett/strategies/nfwqs2/libs"));
-
-// Only for testing
-#[cfg(target_os = "linux")]
-pub static MODULE_PATH: LazyLock<&Path> =
-    LazyLock::new(|| Path::new("zaprett_module"));
-#[cfg(target_os = "linux")]
-pub static ZAPRETT_DIR_PATH: LazyLock<&Path> =
-    LazyLock::new(|| Path::new("zaprett"));
-#[cfg(target_os = "linux")]
-pub static ZAPRETT_LIBS_PATH: LazyLock<&Path> =
-    LazyLock::new(|| Path::new("zaprett/strategies/nfwqs2/libs"));
 
 
 pub static DEFAULT_STRATEGY_NFQWS: &str = "
@@ -69,7 +50,7 @@ fn nfqws2_version() -> &'static str {
 pub async fn merge_files(
     input_paths: &[impl AsRef<Path>],
     output_path: impl AsRef<Path>,
-) -> Result<(), Box<dyn error::Error>> {
+) -> anyhow::Result<()> {
     let output_path = output_path.as_ref();
     let mut output_file = File::create(output_path).await?;
 
@@ -78,18 +59,48 @@ pub async fn merge_files(
 
         let mut input_file = File::open(input)
             .await
-            .map_err(|e| format!("Failed to open {}: {e}", input.display()))?;
+            .map_err(|e| anyhow!("Failed to open {}: {e}", input.display()))?;
 
-        copy(&mut input_file, &mut output_file).await.map_err(|e| {
+        copy(&mut input_file, &mut output_file).await.map_err(|e| anyhow!(
             format!(
                 "Failed to write contents of {}: {e}",
                 input.display()
             )
-        })?;
+        ))?;
     }
 
     output_file.flush().await?;
     Ok(())
+}
+
+pub fn get_manifest(path: &Path) -> anyhow::Result<Manifest> {
+    let content = fs::read_to_string(path)?;
+    Ok(serde_json::from_str(&content)?)
+}
+
+pub fn check_dependencies(manifest: &Manifest) -> anyhow::Result<()> {
+    manifest.dependencies().iter().try_for_each(|dependency| {
+        let path = Path::new(dependency);
+        let manifest = get_manifest(&path).with_context(
+            || format!("Failed to check dependency: {}", dependency)
+        )?;
+        check_file(&manifest)
+    })
+}
+
+pub fn check_file(manifest: &Manifest) -> anyhow::Result<()> {
+    if Path::new(manifest.file()).exists() {
+        Ok(())
+    } else {
+        Err(anyhow!("File not found: {}", manifest.file()))
+    }
+}
+
+pub fn check_manifest(path: &Path) -> anyhow::Result<Manifest> {
+    let manifest = get_manifest(path)?;
+    check_file(&manifest)?;
+    check_dependencies(&manifest)?;
+    Ok(manifest)
 }
 
 fn run_nfqws(args_str: &str) -> anyhow::Result<()> {

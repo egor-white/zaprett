@@ -2,7 +2,7 @@ use crate::config::{Config, ServiceType};
 use crate::daemon::daemonize_nfqws;
 use crate::daemon::daemonize_nfqws2;
 use crate::iptables_rust::{clear_iptables_rules, setup_iptables_rules};
-use crate::{DEFAULT_STRATEGY_NFQWS, DEFAULT_STRATEGY_NFQWS2, MODULE_PATH, ZAPRETT_DIR_PATH, ZAPRETT_LIBS_PATH};
+use crate::{check_manifest, DEFAULT_STRATEGY_NFQWS, DEFAULT_STRATEGY_NFQWS2};
 use anyhow::bail;
 use log::info;
 use nix::sys::signal::{Signal, kill};
@@ -15,6 +15,7 @@ use sysctl::{Ctl, CtlValue, Sysctl};
 use sysinfo::{Pid as SysPid, System};
 use tokio::fs;
 use tokio::io::AsyncReadExt;
+use crate::path::path::{MODULE_PATH, ZAPRETT_DIR_PATH, ZAPRETT_LIBS_PATH};
 
 pub async fn start_service() -> anyhow::Result<()> {
     if !Uid::effective().is_root() {
@@ -53,30 +54,26 @@ pub async fn start_service() -> anyhow::Result<()> {
     }
 
     let config: Config = serde_json::from_str(&config_contents)?;
-
-    let start: Cow<str> = if config.service_type() == &ServiceType::Nfqws {
-        fs::read_to_string(config.strategy())
-            .await
-            .map(Cow::Owned)
-            .unwrap_or(Cow::Borrowed(DEFAULT_STRATEGY_NFQWS))
-    }
-    else if config.service_type() == &ServiceType::Nfqws2 {
-        fs::read_to_string(config.strategy_nfqws2())
-            .await
-            .map(Cow::Owned)
-            .unwrap_or(Cow::Borrowed(DEFAULT_STRATEGY_NFQWS2))
-    }
-    else {
-        bail!("Broken config file!");
+    let strategy = check_manifest(Path::new(config.strategy())).ok();
+    let default_strategy = match config.service_type() {
+        ServiceType::Nfqws => DEFAULT_STRATEGY_NFQWS,
+        ServiceType::Nfqws2 => DEFAULT_STRATEGY_NFQWS2
     };
-
+    let start: Cow<str> = if let Some(manifest) = strategy {
+        fs::read_to_string(manifest.file())
+            .await
+            .map(Cow::Owned)
+            .unwrap_or(Cow::Borrowed(default_strategy))
+    } else {
+        Cow::Borrowed(default_strategy)
+    };
     let regex_hostlist = Regex::new(r"\$(?:hostlist|\{hostlist})")?;
     let regex_ipsets = Regex::new(r"\$(?:ipset|\{ipset})")?;
     let regex_zaprettdir = Regex::new(r"\$(?:zaprettdir|\{zaprettdir})")?;
     let regex_libsdir = Regex::new(r"\$(?:libsdir|\{libsdir})")?;
 
     let mut strat_modified;
-    let (hosts, ipsets) = config.list_type().merge(&config).await;
+    let (hosts, ipsets) = config.list_type().merge(&config).await?;
 
     strat_modified = regex_hostlist.replace_all(&start, &hosts).into_owned();
     strat_modified = regex_ipsets

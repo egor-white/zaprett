@@ -1,6 +1,8 @@
-use crate::{MODULE_PATH, merge_files};
+use std::path::{Path, PathBuf};
+use crate::{check_manifest, merge_files};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
+use crate::path::path::MODULE_PATH;
 
 #[derive(Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -44,11 +46,22 @@ pub struct Config {
     blacklist: Vec<String>,
 }
 
+#[derive(Serialize, Deserialize, Getters)]
+#[getset(get = "pub")]
+pub struct Manifest {
+    schema: i32,
+    name: String,
+    author: String,
+    description: String,
+    dependencies: Vec<String>,
+    file: String
+}
+
 impl ListType {
     /// # Returns
     ///
     /// (hostlist arg, ipset arg)
-    pub async fn merge(&self, config: &Config) -> (String, String) {
+    pub async fn merge(&self, config: &Config) -> anyhow::Result<(String, String)> {
         let module_path_str = MODULE_PATH.to_str().unwrap();
 
         let (host_files, ipset_files, host_suffix, ipset_suffix, exclude_flag) = match self {
@@ -67,16 +80,28 @@ impl ListType {
                 "-exclude",
             ),
         };
+        let host_paths: Vec<PathBuf> = host_files.iter()
+            .map(|path| -> anyhow::Result<PathBuf> {
+                let manifest = check_manifest(Path::new(path))?;
+                Ok(PathBuf::from(manifest.file()))
+            }).collect::<anyhow::Result<_>>()?;
+        let ipset_paths: Vec<PathBuf> = ipset_files
+            .iter()
+            .map(|path| -> anyhow::Result<PathBuf> {
+                let manifest = check_manifest(Path::new(path))?;
+                Ok(PathBuf::from(manifest.file()))
+            })
+            .collect::<anyhow::Result<_>>()?;
 
         let host_path = MODULE_PATH.join(format!("tmp/{host_suffix}"));
         let ipset_path = MODULE_PATH.join(format!("tmp/{ipset_suffix}"));
 
-        merge_files(host_files, host_path).await.unwrap();
-        merge_files(ipset_files, ipset_path).await.unwrap();
+        merge_files(&host_paths, host_path).await?;
+        merge_files(&ipset_paths, ipset_path).await?;
 
-        (
+        Ok((
             format!("--hostlist{exclude_flag}={module_path_str}/tmp/{host_suffix}"),
             format!("--ipset{exclude_flag}={module_path_str}/tmp/{ipset_suffix}"),
-        )
+        ))
     }
 }

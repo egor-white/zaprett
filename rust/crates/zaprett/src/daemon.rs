@@ -1,7 +1,8 @@
-use crate::{MODULE_PATH, run_nfqws, run_nfqws2};
+use crate::{run_nfqws, run_nfqws2};
 use daemonize::Daemonize;
 use log::{error, info};
 use std::fs::File;
+use crate::path::path::MODULE_PATH;
 
 pub async fn daemonize_nfqws(args: &str) {
     info!("Starting nfqws as a daemon");

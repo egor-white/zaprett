@@ -1,7 +1,6 @@
-use std::error;
 use std::process::Command;
 
-pub fn setup_iptables_rules() -> Result<(), Box<dyn error::Error>> {
+pub fn setup_iptables_rules() -> anyhow::Result<()> {
     Command::new("iptables")
         .arg("-t")
         .arg("mangle")
@@ -12,8 +11,7 @@ pub fn setup_iptables_rules() -> Result<(), Box<dyn error::Error>> {
         .arg("--queue-num")
         .arg("200")
         .arg("--queue-bypass")
-        .status()
-        .expect("failed to add iptables rules");
+        .status()?;
 
     Command::new("iptables")
         .arg("-t")
@@ -25,8 +23,7 @@ pub fn setup_iptables_rules() -> Result<(), Box<dyn error::Error>> {
         .arg("--queue-num")
         .arg("200")
         .arg("--queue-bypass")
-        .status()
-        .expect("failed to add iptables rules");
+        .status()?;
 
     Command::new("iptables")
         .arg("-t")
@@ -38,13 +35,12 @@ pub fn setup_iptables_rules() -> Result<(), Box<dyn error::Error>> {
         .arg("--queue-num")
         .arg("200")
         .arg("--queue-bypass")
-        .status()
-        .expect("failed to add iptables rules");
+        .status()?;
 
     Ok(())
 }
 
-pub fn clear_iptables_rules() -> Result<(), Box<dyn error::Error>> {
+pub fn clear_iptables_rules() -> anyhow::Result<()> {
     Command::new("iptables")
         .arg("-t")
         .arg("mangle")
@@ -55,8 +51,7 @@ pub fn clear_iptables_rules() -> Result<(), Box<dyn error::Error>> {
         .arg("--queue-num")
         .arg("200")
         .arg("--queue-bypass")
-        .status()
-        .expect("failed to remove iptables rules");
+        .status()?;
 
     Command::new("iptables")
         .arg("-t")
@@ -68,8 +63,7 @@ pub fn clear_iptables_rules() -> Result<(), Box<dyn error::Error>> {
         .arg("--queue-num")
         .arg("200")
         .arg("--queue-bypass")
-        .status()
-        .expect("failed to remove iptables rules");
+        .status()?;
 
     Command::new("iptables")
         .arg("-t")
@@ -81,8 +75,7 @@ pub fn clear_iptables_rules() -> Result<(), Box<dyn error::Error>> {
         .arg("--queue-num")
         .arg("200")
         .arg("--queue-bypass")
-        .status()
-        .expect("failed to remove iptables rules");
+        .status()?;
 
     Ok(())
 }
