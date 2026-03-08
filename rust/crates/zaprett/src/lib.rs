@@ -5,6 +5,7 @@ pub mod iptables_rust;
 mod service;
 mod autostart;
 mod path;
+mod strategy;
 
 use crate::config::Manifest;
 use anyhow::{anyhow, Context};
@@ -19,12 +20,12 @@ use tokio::io::{copy, AsyncWriteExt};
 
 
 pub static DEFAULT_STRATEGY_NFQWS: &str = "
-        --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum ${hostlist} --new
-        --filter-tcp=443 ${hostlist} --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new
-        --filter-tcp=80,443 --dpi-desync=fake,disorder2 --dpi-desync-repeats=6 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum ${hostlist} --new
+        --filter-tcp=80 --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum ${hostlists} --new
+        --filter-tcp=443 ${hostlists} --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=md5sig,badsum --dpi-desync-fake-tls=${zaprettdir}/bin/tls_clienthello_www_google_com.bin --new
+        --filter-tcp=80,443 --dpi-desync=fake,disorder2 --dpi-desync-repeats=6 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig,badsum ${hostlists} --new
         --filter-udp=50000-50100 --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-fake-quic=0xC30000000108 --new
-        --filter-udp=443 ${hostlist} --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new
-        --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 ${hostlist}
+        --filter-udp=443 ${hostlists} --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=${zaprettdir}/bin/quic_initial_www_google_com.bin --new
+        --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=6 ${hostlists}
         ";
 // тестовая стратегия, заменить на нормальную потом
 pub static DEFAULT_STRATEGY_NFQWS2: &str = "
@@ -73,7 +74,7 @@ pub async fn merge_files(
     Ok(())
 }
 
-pub fn get_manifest(path: &Path) -> anyhow::Result<Manifest> {
+pub fn read_manifest(path: &Path) -> anyhow::Result<Manifest> {
     let content = fs::read_to_string(path)?;
     Ok(serde_json::from_str(&content)?)
 }
@@ -81,7 +82,7 @@ pub fn get_manifest(path: &Path) -> anyhow::Result<Manifest> {
 pub fn check_dependencies(manifest: &Manifest) -> anyhow::Result<()> {
     manifest.dependencies().iter().try_for_each(|dependency| {
         let path = Path::new(dependency);
-        let manifest = get_manifest(&path).with_context(
+        let manifest = read_manifest(&path).with_context(
             || format!("Failed to check dependency: {}", dependency)
         )?;
         check_file(&manifest)
@@ -96,13 +97,20 @@ pub fn check_file(manifest: &Manifest) -> anyhow::Result<()> {
     }
 }
 
-pub fn check_manifest(path: &Path) -> anyhow::Result<Manifest> {
-    let manifest = get_manifest(path)?;
+pub fn get_manifest(path: &Path) -> anyhow::Result<Manifest> {
+    let manifest = read_manifest(path)?;
     check_file(&manifest)?;
     check_dependencies(&manifest)?;
     Ok(manifest)
 }
 
+pub fn get_all_manifests(path: &Path) -> anyhow::Result<Vec<Manifest>> {
+    path.read_dir()?.map(
+        |manifest_path| {
+            get_manifest(&manifest_path?.path())
+        }
+    ).collect()
+}
 fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
     let mut args = vec![
         "nfqws".to_string(),

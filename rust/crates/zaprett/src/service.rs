@@ -1,14 +1,15 @@
-use crate::config::{Config, ServiceType};
+use crate::config::{Config, Manifest, ServiceType};
 use crate::daemon::daemonize_nfqws;
 use crate::daemon::daemonize_nfqws2;
 use crate::iptables_rust::{clear_iptables_rules, setup_iptables_rules};
-use crate::{check_manifest, DEFAULT_STRATEGY_NFQWS, DEFAULT_STRATEGY_NFQWS2};
+use crate::{get_manifest, get_all_manifests, DEFAULT_STRATEGY_NFQWS, DEFAULT_STRATEGY_NFQWS2};
 use anyhow::bail;
 use log::info;
 use nix::sys::signal::{Signal, kill};
 use nix::unistd::{Pid, Uid};
 use regex::Regex;
 use std::borrow::Cow;
+use std::collections::{HashMap};
 use std::io::ErrorKind;
 use std::path::Path;
 use sysctl::{Ctl, CtlValue, Sysctl};
@@ -16,6 +17,7 @@ use sysinfo::{Pid as SysPid, System};
 use tokio::fs;
 use tokio::io::AsyncReadExt;
 use crate::path::path::{MODULE_PATH, ZAPRETT_DIR_PATH, ZAPRETT_LIBS_PATH};
+use crate::strategy::prepare_manifests;
 
 pub async fn start_service() -> anyhow::Result<()> {
     if !Uid::effective().is_root() {
@@ -54,7 +56,7 @@ pub async fn start_service() -> anyhow::Result<()> {
     }
 
     let config: Config = serde_json::from_str(&config_contents)?;
-    let strategy = check_manifest(Path::new(config.strategy())).ok();
+    let strategy = get_manifest(Path::new(config.strategy())).ok();
     let default_strategy = match config.service_type() {
         ServiceType::Nfqws => DEFAULT_STRATEGY_NFQWS,
         ServiceType::Nfqws2 => DEFAULT_STRATEGY_NFQWS2
@@ -67,26 +69,50 @@ pub async fn start_service() -> anyhow::Result<()> {
     } else {
         Cow::Borrowed(default_strategy)
     };
-    let regex_hostlist = Regex::new(r"\$(?:hostlist|\{hostlist})")?;
-    let regex_ipsets = Regex::new(r"\$(?:ipset|\{ipset})")?;
+    let regex_hostlists = Regex::new(r"\$(?:hostlists|\{hostlists})")?;
+    let regex_hostlist = Regex::new(r"\$\{hostlist:([^}]+)\}")?;
+    let regex_hostlist_exclude = Regex::new(r"\$\{hostlist_exclude:([^}]+)\}")?;
+    let regex_ipset = Regex::new(r"\$\{ipset:([^}]+)\}")?;
+    let regex_ipset_exclude = Regex::new(r"\$\{ipset_exclude:([^}]+)\}")?;
+    let regex_ipsets = Regex::new(r"\$(?:ipsets|\{ipsets})")?;
     let regex_zaprettdir = Regex::new(r"\$(?:zaprettdir|\{zaprettdir})")?;
     let regex_libsdir = Regex::new(r"\$(?:libsdir|\{libsdir})")?;
-
-    let mut strat_modified;
     let (hosts, ipsets) = config.list_type().merge(&config).await?;
-
-    strat_modified = regex_hostlist.replace_all(&start, &hosts).into_owned();
-    strat_modified = regex_ipsets
-        .replace_all(&strat_modified, &ipsets)
-        .into_owned();
-
-    strat_modified = regex_zaprettdir
-        .replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap())
-        .into_owned();
-
-    strat_modified = regex_libsdir
-        .replace_all(&strat_modified, ZAPRETT_LIBS_PATH.to_str().unwrap())
-        .into_owned();
+    let hostlists: HashMap<String, Manifest> =
+        get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/lists/include"))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|m| (m.name().clone(), m))
+            .collect();
+    let hostlists_exclude: HashMap<String, Manifest> =
+        get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/lists/exclude"))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|m| (m.name().clone(), m))
+            .collect();
+    let ipset: HashMap<String, Manifest> =
+        get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/ipset/include"))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|m| (m.name().clone(), m))
+            .collect();
+    let ipset_exclude: HashMap<String, Manifest> =
+        get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/ipset/exclude"))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|m| (m.name().clone(), m))
+            .collect();
+    let strat_modified = prepare_manifests(&start, &regex_hostlist, &hostlists, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, &hostlists_exclude, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset, &ipset, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset_exclude, &ipset_exclude, &tmp_dir)?;
+    let strat_modified = regex_hostlists.replace_all(&strat_modified, &hosts);
+    let strat_modified = regex_ipsets.replace_all(&strat_modified, &ipsets);
+    let strat_modified =
+        regex_zaprettdir.replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap());
+    let strat_modified =
+        regex_libsdir.replace_all(&strat_modified, ZAPRETT_LIBS_PATH.to_str().unwrap());
+    let strat_modified = strat_modified.into_owned();
 
     let ctl = Ctl::new("net.netfilter.nf_conntrack_tcp_be_liberal")?;
     ctl.set_value(CtlValue::String("1".into()))?;

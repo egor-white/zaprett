@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use crate::{check_manifest, merge_files};
+use crate::{get_manifest, merge_files};
 use getset::Getters;
 use serde::{Deserialize, Serialize};
 use crate::path::path::MODULE_PATH;
@@ -82,13 +82,13 @@ impl ListType {
         };
         let host_paths: Vec<PathBuf> = host_files.iter()
             .map(|path| -> anyhow::Result<PathBuf> {
-                let manifest = check_manifest(Path::new(path))?;
+                let manifest = get_manifest(Path::new(path))?;
                 Ok(PathBuf::from(manifest.file()))
             }).collect::<anyhow::Result<_>>()?;
         let ipset_paths: Vec<PathBuf> = ipset_files
             .iter()
             .map(|path| -> anyhow::Result<PathBuf> {
-                let manifest = check_manifest(Path::new(path))?;
+                let manifest = get_manifest(Path::new(path))?;
                 Ok(PathBuf::from(manifest.file()))
             })
             .collect::<anyhow::Result<_>>()?;
