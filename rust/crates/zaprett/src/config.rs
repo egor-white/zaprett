@@ -51,6 +51,7 @@ pub struct Config {
 pub struct Manifest {
     schema: i32,
     name: String,
+    version: String,
     author: String,
     description: String,
     dependencies: Vec<String>,
