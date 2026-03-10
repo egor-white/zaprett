@@ -1,6 +1,6 @@
 set shell := ["bash", "-eu", "-c"]
 
-export ANDROID_API := "21"
+export ANDROID_API := "24"
 export ANDROID_NDK_VERSION := "r27d-linux"
 
 TARGET := `pwd` + "/target"

@@ -28,8 +28,8 @@ cp -a src/* zaprett/
 cp -r zaprett/* zaprett-hosts/
 
 echo "Download and copy actual lists"
-wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-youtube.txt -O lists/list-youtube.txt
-wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/lists/include/list-discord.txt -O lists/list-discord.txt
+wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/lists/include/list-youtube.txt -O lists/list-youtube.txt
+wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/lists/include/list-discord.txt -O lists/list-discord.txt
 cp lists/* zaprett/zaprett/lists/include/
 cp lists/* zaprett-hosts/zaprett/lists/include/
 cp hosts/hosts zaprett-hosts/system/etc
