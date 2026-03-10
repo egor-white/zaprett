@@ -1,6 +1,6 @@
 use crate::autostart::{get_autostart, set_autostart};
 use crate::service::{restart_service, service_status, start_service, stop_service};
-use crate::{nfqws_version, nfqws2_version, run_nfqws};
+use crate::{nfqws_version, nfqws2_version, run_nfqws, run_nfqws2};
 use clap::Subcommand;
 
 #[derive(Subcommand)]
@@ -30,7 +30,12 @@ pub enum Command {
     Nfqws2Version,
 
     /// Run nfqws
-    Run {
+    RunNfqws {
+        #[arg(allow_hyphen_values=true, trailing_var_arg = true, num_args = 0..)]
+        args: Vec<String>,
+    },
+    /// Run nfqws2
+    RunNfqws2 {
         #[arg(allow_hyphen_values=true, trailing_var_arg = true, num_args = 0..)]
         args: Vec<String>,
     },
@@ -56,7 +61,8 @@ impl Command {
             Command::GetAutostart => println!("{}", get_autostart()),
             Command::NfqwsVersion => println!("{}", nfqws_version()),
             Command::Nfqws2Version => println!("{}", nfqws2_version()),
-            Command::Run { args } => run_nfqws(&args.join(" "))?,
+            Command::RunNfqws { args } => run_nfqws(&args.join(" "))?,
+            Command::RunNfqws2 { args } => run_nfqws2(&args.join(" "))?,
         }
 
         Ok(())
