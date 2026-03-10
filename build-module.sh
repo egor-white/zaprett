@@ -10,15 +10,13 @@ echo "Make build dirs"
 mkdir -p zaprett/system/bin
 mkdir -p zaprett/zaprett/bin
 mkdir -p zaprett/zaprett/lists/include
-mkdir -p zaprett/zaprett/lists/exclude
-mkdir -p zaprett/zaprett/strategies/nfqws2/libs
+mkdir -p zaprett/zaprett/manifests/lists/include
 mkdir -p zaprett-hosts/system/bin
 mkdir -p zaprett-hosts/system/etc
 mkdir -p zaprett-hosts/zaprett/bin
 mkdir -p zaprett-hosts/zaprett/lists/include
-mkdir -p zaprett-hosts/zaprett/lists/exclude
-mkdir -p zaprett/zaprett/strategies/nfqws2/libs
-mkdir -p out lists
+mkdir -p zaprett-hosts/zaprett/manifests/lists/include
+mkdir -p out manifests lists
 
 echo "Copy files to dirs"
 cp rust/target/armv7-linux-androideabi/release/zaprett zaprett/system/bin/zaprett-armv7
@@ -27,11 +25,15 @@ cp rust/target/x86_64-linux-android/release/zaprett zaprett/system/bin/zaprett-x
 cp -a src/* zaprett/
 cp -r zaprett/* zaprett-hosts/
 
-echo "Download and copy actual lists"
+echo "Download and copy actual lists and manifests"
+wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/lists/include/list-youtube.json -O manifests/list-youtube.json
+wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/manifests/lists/include/list-discord.json -O manifests/list-discord.json
 wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/lists/include/list-youtube.txt -O lists/list-youtube.txt
 wget https://raw.githubusercontent.com/CherretGit/zaprett-repo/refs/heads/main/files/lists/include/list-discord.txt -O lists/list-discord.txt
 cp lists/* zaprett/zaprett/lists/include/
+cp manifests/* zaprett/zaprett/manifests/lists/include
 cp lists/* zaprett-hosts/zaprett/lists/include/
+cp manifests/* zaprett-hosts/zaprett/manifests/lists/include
 cp hosts/hosts zaprett-hosts/system/etc
 
 echo "Create module.prop"
@@ -62,4 +64,4 @@ mv zaprett.zip out/
 mv zaprett-hosts.zip out/
 
 echo "Clean temp files"
-rm -rf zaprett zaprett-hosts lists
+rm -rf zaprett zaprett-hosts manifests lists

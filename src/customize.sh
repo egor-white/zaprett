@@ -23,10 +23,10 @@ case "$arch" in
     "x86_64")
         zaprett_bin="zaprett-x86_64"
         ;;
-    "armv7l"|"arm")
+    "armv7l"|"arm" | "armv8l")
         zaprett_bin="zaprett-armv7"
         ;;
-    "aarch64"|"armv8l")
+    "aarch64")
         zaprett_bin="zaprett-aarch64"
         ;;
     *)
