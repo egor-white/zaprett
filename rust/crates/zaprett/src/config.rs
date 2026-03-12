@@ -50,6 +50,7 @@ pub struct Config {
 #[getset(get = "pub")]
 pub struct Manifest {
     schema: i32,
+    id: String,
     name: String,
     version: String,
     author: String,

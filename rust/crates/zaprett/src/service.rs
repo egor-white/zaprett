@@ -56,18 +56,17 @@ pub async fn start_service() -> anyhow::Result<()> {
     }
 
     let config: Config = serde_json::from_str(&config_contents)?;
-    let strategy = get_manifest(Path::new(config.strategy())).ok();
+    let strategy = match config.service_type() {
+        ServiceType::Nfqws => get_manifest(Path::new(config.strategy()))?,
+        ServiceType::Nfqws2 => get_manifest(Path::new(config.strategy_nfqws2()))?
+    };
     let default_strategy = match config.service_type() {
         ServiceType::Nfqws => DEFAULT_STRATEGY_NFQWS,
         ServiceType::Nfqws2 => DEFAULT_STRATEGY_NFQWS2
     };
-    let start: Cow<str> = if let Some(manifest) = strategy {
-        fs::read_to_string(manifest.file())
-            .await
-            .map(Cow::Owned)
-            .unwrap_or(Cow::Borrowed(default_strategy))
-    } else {
-        Cow::Borrowed(default_strategy)
+    let start = match fs::read_to_string(strategy.file()).await {
+        Ok(s) => Cow::Owned(s),
+        Err(_) => Cow::Borrowed(default_strategy)
     };
     let regex_hostlists = Regex::new(r"\$(?:hostlists|\{hostlists})")?;
     let regex_hostlist = Regex::new(r"\$\{hostlist:([^}]+)\}")?;
@@ -82,25 +81,25 @@ pub async fn start_service() -> anyhow::Result<()> {
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/lists/include"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.name().clone(), m))
+            .map(|m| (m.id().clone(), m))
             .collect();
     let hostlists_exclude: HashMap<String, Manifest> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/lists/exclude"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.name().clone(), m))
+            .map(|m| (m.id().clone(), m))
             .collect();
     let ipset: HashMap<String, Manifest> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/ipset/include"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.name().clone(), m))
+            .map(|m| (m.id().clone(), m))
             .collect();
     let ipset_exclude: HashMap<String, Manifest> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/ipset/exclude"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.name().clone(), m))
+            .map(|m| (m.id().clone(), m))
             .collect();
     let strat_modified = prepare_manifests(&start, &regex_hostlist, &hostlists, &tmp_dir)?;
     let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, &hostlists_exclude, &tmp_dir)?;

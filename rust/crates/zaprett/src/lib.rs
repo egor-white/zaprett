@@ -75,8 +75,13 @@ pub async fn merge_files(
 }
 
 pub fn read_manifest(path: &Path) -> anyhow::Result<Manifest> {
-    let content = fs::read_to_string(path)?;
-    Ok(serde_json::from_str(&content)?)
+    let content = fs::read_to_string(path).with_context(|| {
+        format!("Failed to read manifest: {}", path.display())
+    })?;
+    let manifest = serde_json::from_str(&content).with_context(|| {
+        format!("Failed to parse mnanifest: {}", path.display())
+    })?;
+    Ok(manifest)
 }
 
 pub fn check_dependencies(manifest: &Manifest) -> anyhow::Result<()> {
@@ -107,7 +112,10 @@ pub fn get_manifest(path: &Path) -> anyhow::Result<Manifest> {
 pub fn get_all_manifests(path: &Path) -> anyhow::Result<Vec<Manifest>> {
     path.read_dir()?.map(
         |manifest_path| {
-            get_manifest(&manifest_path?.path())
+            let manifest_path = manifest_path?;
+            get_manifest(&manifest_path.path()).with_context(|| {
+                format!("Failed to get manifest: {}", manifest_path.path().display())
+            })
         }
     ).collect()
 }
