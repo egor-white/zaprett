@@ -56,17 +56,19 @@ pub async fn start_service() -> anyhow::Result<()> {
     }
 
     let config: Config = serde_json::from_str(&config_contents)?;
-    let strategy = match config.service_type() {
-        ServiceType::Nfqws => get_manifest(Path::new(config.strategy()))?,
-        ServiceType::Nfqws2 => get_manifest(Path::new(config.strategy_nfqws2()))?
+    let strategy_path = match config.service_type() {
+        ServiceType::Nfqws => config.strategy(),
+        ServiceType::Nfqws2 => config.strategy_nfqws2(),
     };
     let default_strategy = match config.service_type() {
         ServiceType::Nfqws => DEFAULT_STRATEGY_NFQWS,
         ServiceType::Nfqws2 => DEFAULT_STRATEGY_NFQWS2
     };
-    let start = match fs::read_to_string(strategy.file()).await {
-        Ok(s) => Cow::Owned(s),
-        Err(_) => Cow::Borrowed(default_strategy)
+    let start = if strategy_path.is_empty() || !Path::new(strategy_path).exists() {
+        Cow::Borrowed(default_strategy)
+    } else {
+        let manifest = get_manifest(Path::new(strategy_path))?;
+        Cow::Owned(fs::read_to_string(manifest.file()).await?)
     };
     let regex_hostlists = Regex::new(r"\$(?:hostlists|\{hostlists})")?;
     let regex_hostlist = Regex::new(r"\$\{hostlist:([^}]+)\}")?;
