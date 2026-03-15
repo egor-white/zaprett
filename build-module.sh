@@ -22,6 +22,30 @@ echo "Copy files to dirs"
 cp rust/target/armv7-linux-androideabi/release/zaprett zaprett/system/bin/zaprett-armv7
 cp rust/target/aarch64-linux-android/release/zaprett zaprett/system/bin/zaprett-aarch64
 cp rust/target/x86_64-linux-android/release/zaprett zaprett/system/bin/zaprett-x86_64
+
+echo "Copy shared libraries"
+for arch in armeabi-v7a arm64-v8a x86_64; do
+    case "$arch" in
+        armeabi-v7a) target=armv7-linux-androideabi ;;
+        arm64-v8a)   target=aarch64-linux-android ;;
+        x86_64)      target=x86_64-linux-android ;;
+    esac
+
+    src_dir="rust/target/${target}/release"
+    lib_dir="zaprett/system/lib/$arch"
+    mkdir -p "$lib_dir"
+
+    for lib in libnfqws.so libnfqws2.so; do
+        found=$(find "$src_dir" -name "$lib" -type f | head -n 1)
+        if [ -n "$found" ]; then
+            cp "$found" "$lib_dir/"
+            echo "Copied $lib for $arch"
+        else
+            echo "Warning: $lib not found for $arch in $src_dir"
+        fi
+    done
+done
+
 cp -a src/* zaprett/
 cp -r zaprett/* zaprett-hosts/
 

@@ -66,7 +66,7 @@ _build_netfilter_libs target_arch:
         (
             cd $i-*
             make clean
-            CFLAGS="-Os -flto=auto -Wno-implicit-function-declaration" \
+            CFLAGS="-Os -flto=auto -Wno-implicit-function-declaration -fPIC" \
             ./configure --prefix= --host={{target_arch}} --enable-static --disable-shared --disable-dependency-tracking
             make -j$(nproc)
             make install DESTDIR=$NETFILTER_LIBS-{{target_arch}}
@@ -99,15 +99,12 @@ _build_luajit target_arch:
 
         (
           cd luajit2-*
-          make clean
-          make BUILDMODE=static XCFLAGS=-DLUAJIT_DISABLE_FFI \
-               HOST_CC="$HOSTCC" CROSS= CC="$CC" \
-               TARGET_AR="$AR rcus" TARGET_STRIP=$STRIP \
-               CFLAGS="-Os -flto=auto" -j$(nproc)
-
+        make clean
+        make BUILDMODE=static XCFLAGS="-DLUAJIT_DISABLE_FFI -fPIC" \
+             HOST_CC="$HOSTCC" CROSS= CC="$CC" \
+             TARGET_AR="$AR rcus" TARGET_STRIP=$STRIP \
+             CFLAGS="-Os -fPIC" -j$(nproc)
           make install PREFIX= DESTDIR="{{LUAJIT_LIBS}}-{{target_arch}}"
-          mv "{{LUAJIT_LIBS}}-{{target_arch}}/lib/libluajit-5.1.a" \
-             "{{LUAJIT_LIBS}}-{{target_arch}}/lib/libluajit.a"
         )
     else
         echo "LuaJIT for {{target_arch}} already built"
@@ -161,7 +158,6 @@ build-android *args: prepare-android
             export LJIT=1
             export LCFLAGS="-I$LUAJIT_LIBS-$t/include/luajit-2.1"
             export LLIB="-L$LUAJIT_LIBS-$t/lib -lluajit-2.1"
-
             just _build_netfilter_libs $t
             just _build_luajit $t
             just _install_rust_target $t
