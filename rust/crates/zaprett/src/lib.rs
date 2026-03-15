@@ -79,7 +79,7 @@ pub fn read_manifest(path: &Path) -> anyhow::Result<Manifest> {
         format!("Failed to read manifest: {}", path.display())
     })?;
     let manifest = serde_json::from_str(&content).with_context(|| {
-        format!("Failed to parse mnanifest: {}", path.display())
+        format!("Failed to parse manifest: {}", path.display())
     })?;
     Ok(manifest)
 }
