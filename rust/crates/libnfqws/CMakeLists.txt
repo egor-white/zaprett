@@ -25,10 +25,11 @@ if(ANDROID)
 endif()
 
 target_link_libraries(nfqws PRIVATE
+    $ENV{NETFILTER_LIBS}/lib/libnetfilter_queue.a
+    $ENV{NETFILTER_LIBS}/lib/libnfnetlink.a
+    $ENV{NETFILTER_LIBS}/lib/libmnl.a
     z
-    netfilter_queue
-    nfnetlink
-    mnl
+    unwind
 )
 
 install(TARGETS nfqws

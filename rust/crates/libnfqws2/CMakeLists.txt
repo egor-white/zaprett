@@ -23,12 +23,12 @@ if(ANDROID)
 endif()
 
 target_link_libraries(nfqws2 PRIVATE
-    z
-    netfilter_queue
-    nfnetlink
-    mnl
-    unwind
+    $ENV{NETFILTER_LIBS}/lib/libnetfilter_queue.a
+    $ENV{NETFILTER_LIBS}/lib/libnfnetlink.a
+    $ENV{NETFILTER_LIBS}/lib/libmnl.a
     $ENV{LUAJIT_LIBS}/lib/libluajit-5.1.a
+    z
+    unwind
 )
 
 install(TARGETS nfqws2

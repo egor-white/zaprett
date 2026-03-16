@@ -137,10 +137,15 @@ fn run_nfqws(args_str: &str) -> anyhow::Result<()> {
         .map(|arg| CString::new(arg).unwrap())
         .collect();
 
-    let mut ptrs: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
+    let mut ptrs: Vec<*mut c_char> = c_args
+        .iter()
+        .map(|arg| arg.as_ptr() as *mut c_char)
+        .collect();
+
+    ptrs.push(std::ptr::null_mut());
 
     unsafe {
-        nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
+        nfqws_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr());
     }
 
     Ok(())
@@ -165,10 +170,15 @@ fn run_nfqws2(args_str: &str) -> anyhow::Result<()> {
         .map(|arg| CString::new(arg).unwrap())
         .collect();
 
-    let mut ptrs: Vec<*const c_char> = c_args.iter().map(|arg| arg.as_ptr()).collect();
+    let mut ptrs: Vec<*mut c_char> = c_args
+        .iter()
+        .map(|arg| arg.as_ptr() as *mut c_char)
+        .collect();
+
+    ptrs.push(std::ptr::null_mut());
 
     unsafe {
-        nfqws2_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr() as *mut _);
+        nfqws2_main(c_args.len() as libc::c_int, ptrs.as_mut_ptr());
     }
 
     Ok(())
