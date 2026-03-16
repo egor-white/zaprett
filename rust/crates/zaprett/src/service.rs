@@ -106,7 +106,7 @@ pub async fn start_service() -> anyhow::Result<()> {
             .map(|m| (m.id().clone(), m))
             .collect();
     let bins: HashMap<String, Manifest> =
-        get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/bin/exclude"))
+        get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/bin"))
             .unwrap_or_default()
             .into_iter()
             .map(|m| (m.id().clone(), m))
