@@ -33,8 +33,9 @@ pub async fn start_service() -> anyhow::Result<()> {
     let tmp_dir = MODULE_PATH.join("tmp");
     if tmp_dir.exists() {
         fs::remove_dir_all(&tmp_dir).await?;
-        fs::create_dir_all(&tmp_dir).await?;
     }
+
+    fs::create_dir_all(&tmp_dir).await?;
 
     let config_path = ZAPRETT_DIR_PATH.join("config.json");
     let mut config_contents = String::new();
@@ -78,6 +79,7 @@ pub async fn start_service() -> anyhow::Result<()> {
     let regex_ipsets = Regex::new(r"\$(?:ipsets|\{ipsets})")?;
     let regex_zaprettdir = Regex::new(r"\$(?:zaprettdir|\{zaprettdir})")?;
     let regex_libsdir = Regex::new(r"\$(?:libsdir|\{libsdir})")?;
+    let regex_bindir = Regex::new(r"\$\{bin:([^}]+)\}")?;
     let (hosts, ipsets) = config.list_type().merge(&config).await?;
     let hostlists: HashMap<String, Manifest> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/lists/include"))
@@ -103,10 +105,17 @@ pub async fn start_service() -> anyhow::Result<()> {
             .into_iter()
             .map(|m| (m.id().clone(), m))
             .collect();
+    let bins: HashMap<String, Manifest> =
+        get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/bin/exclude"))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|m| (m.id().clone(), m))
+            .collect();
     let strat_modified = prepare_manifests(&start, &regex_hostlist, &hostlists, &tmp_dir)?;
     let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, &hostlists_exclude, &tmp_dir)?;
     let strat_modified = prepare_manifests(&strat_modified, &regex_ipset, &ipset, &tmp_dir)?;
     let strat_modified = prepare_manifests(&strat_modified, &regex_ipset_exclude, &ipset_exclude, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_bindir, &bins, &tmp_dir)?;
     let strat_modified = regex_hostlists.replace_all(&strat_modified, &hosts);
     let strat_modified = regex_ipsets.replace_all(&strat_modified, &ipsets);
     let strat_modified =
