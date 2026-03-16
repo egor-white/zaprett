@@ -17,8 +17,10 @@ target_include_directories(nfqws2 PRIVATE
 target_compile_definitions(nfqws2 PRIVATE main=nfqws2_main)
 target_compile_options(nfqws2 PRIVATE -w)
 
-find_library(LOG_LIB log)
-target_link_libraries(nfqws2 PRIVATE ${LOG_LIB})
+if(ANDROID)
+    find_library(LOG_LIB log)
+    target_link_libraries(nfqws2 PRIVATE ${LOG_LIB})
+endif()
 
 target_link_libraries(nfqws2 PRIVATE
     z
