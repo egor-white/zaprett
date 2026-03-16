@@ -3,7 +3,7 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-pub fn prepare_manifests(input: &str, regex: &Regex, manifests: &HashMap<String, Manifest>, tmp_dir: &Path) -> anyhow::Result<String> {
+pub fn prepare_manifests(input: &str, regex: &Regex, manifests: &HashMap<String, Manifest>, tmp_dir: &Path, ext: &str) -> anyhow::Result<String> {
     let required: HashSet<String> = regex.captures_iter(input).map(|c| c[1].to_string()).collect();
     let mut paths: HashMap<String, PathBuf> = HashMap::new();
     for id in &required {
@@ -11,7 +11,8 @@ pub fn prepare_manifests(input: &str, regex: &Regex, manifests: &HashMap<String,
             .get(id)
             .ok_or_else(|| anyhow::anyhow!("Manifest not found: {}", id))?;
         let path = Path::new(manifest.file());
-        let dst = tmp_dir.join(format!("{}.txt", id));
+        let mut dst = tmp_dir.join(id);
+        dst.set_extension(ext);
         std::fs::copy(path, &dst)?;
         paths.insert(id.clone(), dst);
     }

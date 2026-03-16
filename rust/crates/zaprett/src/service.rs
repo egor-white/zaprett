@@ -111,11 +111,11 @@ pub async fn start_service() -> anyhow::Result<()> {
             .into_iter()
             .map(|m| (m.id().clone(), m))
             .collect();
-    let strat_modified = prepare_manifests(&start, &regex_hostlist, &hostlists, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, &hostlists_exclude, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset, &ipset, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset_exclude, &ipset_exclude, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_bindir, &bins, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&start, &regex_hostlist, &hostlists, &tmp_dir, "txt")?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, &hostlists_exclude, &tmp_dir, "txt")?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset, &ipset, &tmp_dir, "txt")?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset_exclude, &ipset_exclude, &tmp_dir, "txt")?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_bindir, &bins, &tmp_dir, "bin")?;
     let strat_modified = regex_hostlists.replace_all(&strat_modified, &hosts);
     let strat_modified = regex_ipsets.replace_all(&strat_modified, &ipsets);
     let strat_modified =
