@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(nfqws2 C)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 file(GLOB NFQ_SOURCES "zapret2/nfq2/*.c")
@@ -16,6 +17,8 @@ target_include_directories(nfqws2 PRIVATE
 
 target_compile_definitions(nfqws2 PRIVATE main=nfqws2_main)
 target_compile_options(nfqws2 PRIVATE -w)
+
+set_target_properties(nfqws2 PROPERTIES LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/nfqws2.map")
 
 if(ANDROID)
     find_library(LOG_LIB log)

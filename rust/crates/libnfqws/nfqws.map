@@ -1,0 +1,6 @@
+{
+  global:
+  nfqws_main;
+  local:
+  *;
+};

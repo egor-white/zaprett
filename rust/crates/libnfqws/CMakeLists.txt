@@ -19,6 +19,8 @@ target_include_directories(nfqws PRIVATE
 target_compile_definitions(nfqws PRIVATE main=nfqws_main)
 target_compile_options(nfqws PRIVATE -w)
 
+set_target_properties(nfqws PROPERTIES LINK_FLAGS "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/nfqws.map")
+
 if(ANDROID)
     find_library(LOG_LIB log)
     target_link_libraries(nfqws PRIVATE ${LOG_LIB})
