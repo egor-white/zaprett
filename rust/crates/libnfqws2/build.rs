@@ -9,9 +9,7 @@ fn main() {
     println!("cargo:rerun-if-changed=CMakeLists.txt");
     println!("cargo:rerun-if-changed=zapret2/nfq2");
     println!("cargo:rerun-if-changed=build.rs");
-
     let mut builder = bindgen::Builder::default();
-
     for header in glob::glob("zapret2/nfq2/*.h")
         .unwrap()
         .filter_map(Result::ok)

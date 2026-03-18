@@ -8,11 +8,9 @@ just -f rust/justfile build-android --release
 
 echo "Make build dirs"
 mkdir -p zaprett/system/bin
-mkdir -p zaprett/zaprett/bin
 mkdir -p zaprett/zaprett/files/lists/include
 mkdir -p zaprett-hosts/system/bin
 mkdir -p zaprett-hosts/system/etc
-mkdir -p zaprett-hosts/zaprett/bin
 mkdir -p zaprett-hosts/zaprett/files/lists/include
 mkdir -p out lists
 

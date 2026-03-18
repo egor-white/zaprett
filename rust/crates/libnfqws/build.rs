@@ -5,6 +5,7 @@ fn main() {
     let dst = cmake::Config::new(env::var("CARGO_MANIFEST_DIR").unwrap()).build();
     println!("cargo:rustc-link-search=native={}", dst.join("lib").display());
     println!("cargo:rustc-link-lib=dylib=nfqws");
+
     println!("cargo:rerun-if-changed=zapret/nfq");
     println!("cargo:rerun-if-changed=CMakeLists.txt");
     println!("cargo:rerun-if-changed=build.rs");
