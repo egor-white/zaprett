@@ -5,6 +5,6 @@ edition.workspace = true
 repository.workspace = true
 
 [build-dependencies]
+cmake = "0.1.57"
 glob = "0.3.3"
 bindgen = "0.72.1"
-cmake = "0.1.57"

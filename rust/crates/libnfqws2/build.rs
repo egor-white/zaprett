@@ -5,20 +5,6 @@ fn main() {
     let dst = cmake::Config::new(env::var("CARGO_MANIFEST_DIR").unwrap()).build();
     println!("cargo:rustc-link-search=native={}", dst.join("lib").display());
     println!("cargo:rustc-link-lib=dylib=nfqws2");
-    println!("cargo:rustc-link-lib=z");
-    println!("cargo:rustc-link-lib=netfilter_queue");
-    println!("cargo:rustc-link-lib=nfnetlink");
-    println!("cargo:rustc-link-lib=mnl");
-    println!("cargo:rustc-link-lib=static=luajit-5.1");
-    println!("cargo:rustc-link-lib=unwind");
-
-    if let Ok(libs) = env::var("NETFILTER_LIBS") {
-        println!("cargo:rustc-link-search=native={libs}/lib");
-    }
-
-    if let Ok(libs) = env::var("LUAJIT_LIBS") {
-        println!("cargo:rustc-link-search=native={libs}/lib");
-    }
 
     println!("cargo:rerun-if-changed=CMakeLists.txt");
     println!("cargo:rerun-if-changed=zapret2/nfq2");
