@@ -1,0 +1,10 @@
+{
+    "schema": 1,
+    "id": "tls_clienthello_www_google_com",
+    "name": "tls_clienthello_www_google_com",
+    "version": "1.0.0",
+    "author": "zaprett-devs",
+    "description": "Binary artifact: tls_clienthello_www_google_com",
+    "dependencies": [],
+    "file": "/storage/emulated/0/zaprett/files/bin/tls_clienthello_www_google_com.bin"
+}

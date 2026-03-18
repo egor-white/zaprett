@@ -1,0 +1,10 @@
+{
+    "schema": 1,
+    "id": "tls_clienthello_4pda_to",
+    "name": "tls_clienthello_4pda_to",
+    "version": "1.0.0",
+    "author": "zaprett-devs",
+    "description": "Binary artifact: tls_clienthello_4pda_to",
+    "dependencies": [],
+    "file": "/storage/emulated/0/zaprett/files/bin/tls_clienthello_4pda_to.bin"
+}

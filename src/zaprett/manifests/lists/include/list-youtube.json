@@ -1,0 +1,10 @@
+{
+    "schema": 1,
+    "id": "list-youtube",
+    "name": "list-youtube",
+    "version": "1.0.0",
+    "author": "zaprett-devs",
+    "description": "Домены YouTube",
+    "dependencies": [],
+    "file": "/storage/emulated/0/zaprett/files/lists/include/list-youtube.txt"
+}

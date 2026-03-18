@@ -1,0 +1,10 @@
+{
+    "schema": 1,
+    "id": "quic_initial_www_google_com",
+    "name": "quic_initial_www_google_com",
+    "version": "1.0.0",
+    "author": "zaprett-devs",
+    "description": "Binary artifact: quic_initial_www_google_com",
+    "dependencies": [],
+    "file": "/storage/emulated/0/zaprett/files/bin/quic_initial_www_google_com.bin"
+}

@@ -12,7 +12,7 @@ ui_print "App by: egor-white, Cherret"
 ui_print "####################"
 
 ui_print "Creating zaprett directory..."
-mkdir /sdcard/zaprett; mkdir /sdcard/zaprett/lists; mkdir /sdcard/zaprett/bin; mkdir /sdcard/zaprett/strategies;
+mkdir /sdcard/zaprett
 
 ui_print "Copying lists and binaries to /sdcard/zaprett..."
 cp -r $MODPATH/zaprett/. /sdcard/zaprett/

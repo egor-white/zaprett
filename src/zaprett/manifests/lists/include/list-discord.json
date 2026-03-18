@@ -1,0 +1,10 @@
+{
+    "schema": 1,
+    "id": "list-discord",
+    "name": "list-discord",
+    "version": "1.0.0",
+    "author": "zaprett-devs",
+    "description": "Домены Discord",
+    "dependencies": [],
+    "file": "/storage/emulated/0/zaprett/files/lists/include/list-discord.txt"
+}
