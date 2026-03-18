@@ -110,24 +110,6 @@ _build_luajit target_arch:
         echo "LuaJIT for {{target_arch}} already built"
     fi
 
-_elf-clean target_dir:
-    #!/usr/bin/env bash
-    TERMUX_ELF_CLEANER="{{TARGET}}/termux-elf-cleaner"
-    if [ ! -f "$TERMUX_ELF_CLEANER" ]; then
-        echo "Downloading termux-elf-cleaner to {{TARGET}}..."
-        mkdir -p "{{TARGET}}"
-        wget -q -O "$TERMUX_ELF_CLEANER" "https://github.com/termux/termux-elf-cleaner/releases/download/v3.0.1/termux-elf-cleaner"
-        chmod +x "$TERMUX_ELF_CLEANER"
-    fi
-    BINARY="{{target_dir}}/zaprett"
-    if [ -f "$BINARY" ]; then
-        echo "Patching $BINARY with API {{ANDROID_API}}..."
-        "$TERMUX_ELF_CLEANER" --api {{ANDROID_API}} "$BINARY"
-    else
-        echo "Binary $BINARY not found!"
-        exit 1
-    fi
-
 _install_rust_target target:
     #!/usr/bin/env bash
     if ! rustup target list --installed | grep -q "{{target}}"; then
@@ -162,6 +144,5 @@ build-android *args: prepare-android
             just _build_luajit $t
             just _install_rust_target $t
             NETFILTER_LIBS=$NETFILTER_LIBS-$t LUAJIT_LIBS=$LUAJIT_LIBS-$t cargo ndk -t $t --platform $ANDROID_API build {{args}}
-            just _elf-clean "target/${t}/release"
         )
     done
