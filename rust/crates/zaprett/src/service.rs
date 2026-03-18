@@ -16,7 +16,7 @@ use sysctl::{Ctl, CtlValue, Sysctl};
 use sysinfo::{Pid as SysPid, System};
 use tokio::fs;
 use tokio::io::AsyncReadExt;
-use crate::path::path::{MODULE_PATH, ZAPRETT_DIR_PATH, ZAPRETT_LIBS_PATH};
+use crate::path::path::{MODULE_PATH, ZAPRETT_DIR_PATH};
 use crate::strategy::prepare_manifests;
 
 pub async fn start_service() -> anyhow::Result<()> {
@@ -71,14 +71,13 @@ pub async fn start_service() -> anyhow::Result<()> {
         let manifest = get_manifest(Path::new(strategy_path))?;
         Cow::Owned(fs::read_to_string(manifest.file()).await?)
     };
-    let regex_hostlists = Regex::new(r"\$(?:hostlists|\{hostlists})")?;
+    let regex_hostlists = Regex::new(r"\$\{hostlists\}")?;
     let regex_hostlist = Regex::new(r"\$\{hostlist:([^}]+)\}")?;
     let regex_hostlist_exclude = Regex::new(r"\$\{hostlist_exclude:([^}]+)\}")?;
     let regex_ipset = Regex::new(r"\$\{ipset:([^}]+)\}")?;
     let regex_ipset_exclude = Regex::new(r"\$\{ipset_exclude:([^}]+)\}")?;
-    let regex_ipsets = Regex::new(r"\$(?:ipsets|\{ipsets})")?;
-    let regex_zaprettdir = Regex::new(r"\$(?:zaprettdir|\{zaprettdir})")?;
-    let regex_libsdir = Regex::new(r"\$(?:libsdir|\{libsdir})")?;
+    let regex_ipsets = Regex::new(r"\$\{ipsets\}")?;
+    let regex_libsdir = Regex::new(r"\$\{lua_lib:([^}]+)\}")?;
     let regex_bindir = Regex::new(r"\$\{bin:([^}]+)\}")?;
     let (hosts, ipsets) = config.list_type().merge(&config).await?;
     let hostlists: HashMap<String, Manifest> =
@@ -105,29 +104,32 @@ pub async fn start_service() -> anyhow::Result<()> {
             .into_iter()
             .map(|m| (m.id().clone(), m))
             .collect();
+    let lua_lib: HashMap<String, Manifest> =
+        get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/libs"))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|m| (m.id().clone(), m))
+            .collect();
     let bins: HashMap<String, Manifest> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/bin"))
             .unwrap_or_default()
             .into_iter()
             .map(|m| (m.id().clone(), m))
             .collect();
-    let strat_modified = prepare_manifests(&start, &regex_hostlist, &hostlists, &tmp_dir, "txt")?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, &hostlists_exclude, &tmp_dir, "txt")?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset, &ipset, &tmp_dir, "txt")?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset_exclude, &ipset_exclude, &tmp_dir, "txt")?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_bindir, &bins, &tmp_dir, "bin")?;
+    let strat_modified = prepare_manifests(&start, &regex_hostlist, &hostlists, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, &hostlists_exclude, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset, &ipset, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset_exclude, &ipset_exclude, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_libsdir, &lua_lib, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_bindir, &bins, &tmp_dir)?;
     let strat_modified = regex_hostlists.replace_all(&strat_modified, &hosts);
     let strat_modified = regex_ipsets.replace_all(&strat_modified, &ipsets);
-    let strat_modified =
-        regex_zaprettdir.replace_all(&strat_modified, ZAPRETT_DIR_PATH.to_str().unwrap());
-    let strat_modified =
-        regex_libsdir.replace_all(&strat_modified, ZAPRETT_LIBS_PATH.to_str().unwrap());
     let strat_modified = strat_modified.into_owned();
 
     let ctl = Ctl::new("net.netfilter.nf_conntrack_tcp_be_liberal")?;
     ctl.set_value(CtlValue::String("1".into()))?;
 
-    setup_iptables_rules().expect("setup iptables rules");
+    setup_iptables_rules()?;
 
     if config.service_type() == &ServiceType::Nfqws {
         daemonize_nfqws(&strat_modified).await;
