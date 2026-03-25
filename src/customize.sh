@@ -12,9 +12,13 @@ ui_print "App by: egor-white, Cherret"
 ui_print "####################"
 
 ui_print "Moving old folder (if exists)"
-source /data/adb/modules/zaprett/module.prop
-if [ $versionCode -le 65 ]; then
-    mv /sdcard/zaprett /sdcard/zaprett-old
+PROP_FILE="/data/adb/modules/zaprett/module.prop"
+if [ -f "$PROP_FILE" ]; then
+    source "$PROP_FILE"
+
+    if [ -n "$versionCode" ] && [ "$versionCode" -le 65 ]; then
+        mv /sdcard/zaprett /sdcard/zaprett-old
+    fi
 fi
 
 ui_print "Creating zaprett directory..."
