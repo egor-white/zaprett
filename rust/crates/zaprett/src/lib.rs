@@ -14,7 +14,7 @@ use libnfqws2::nfqws2_main;
 use std::ffi::CString;
 use std::fs;
 use std::os::raw::c_char;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tokio::fs::File;
 use tokio::io::{copy, AsyncWriteExt};
 
@@ -109,13 +109,14 @@ pub fn get_manifest(path: &Path) -> anyhow::Result<Manifest> {
     Ok(manifest)
 }
 
-pub fn get_all_manifests(path: &Path) -> anyhow::Result<Vec<Manifest>> {
+pub fn get_all_manifests(path: &Path) -> anyhow::Result<Vec<(PathBuf, Manifest)>> {
     path.read_dir()?.map(
         |manifest_path| {
-            let manifest_path = manifest_path?;
-            get_manifest(&manifest_path.path()).with_context(|| {
-                format!("Failed to get manifest: {}", manifest_path.path().display())
-            })
+            let manifest_path = manifest_path?.path();
+            let manifest = get_manifest(&manifest_path).with_context(|| {
+                format!("Failed to get manifest: {}", manifest_path.display())
+            })?;
+            Ok((manifest_path, manifest))
         }
     ).collect()
 }

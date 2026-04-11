@@ -11,7 +11,7 @@ use regex::Regex;
 use std::borrow::Cow;
 use std::collections::{HashMap};
 use std::io::ErrorKind;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use sysctl::{Ctl, CtlValue, Sysctl};
 use sysinfo::{Pid as SysPid, System};
 use tokio::fs;
@@ -65,11 +65,12 @@ pub async fn start_service() -> anyhow::Result<()> {
         ServiceType::Nfqws => DEFAULT_STRATEGY_NFQWS,
         ServiceType::Nfqws2 => DEFAULT_STRATEGY_NFQWS2
     };
-    let start = if strategy_path.is_empty() || !Path::new(strategy_path).exists() {
-        Cow::Borrowed(default_strategy)
+    let (strategy_manifest, start) = if strategy_path.is_empty() || !Path::new(strategy_path).exists() {
+        (None, Cow::Borrowed(default_strategy))
     } else {
         let manifest = get_manifest(Path::new(strategy_path))?;
-        Cow::Owned(fs::read_to_string(manifest.file()).await?)
+        let content = fs::read_to_string(manifest.file()).await?;
+        (Some(manifest), Cow::Owned(content))
     };
     let regex_hostlists = Regex::new(r"\$\{hostlists\}")?;
     let regex_hostlist = Regex::new(r"\$\{hostlist:([^}]+)\}")?;
@@ -80,48 +81,48 @@ pub async fn start_service() -> anyhow::Result<()> {
     let regex_libsdir = Regex::new(r"\$\{lua_lib:([^}]+)\}")?;
     let regex_bindir = Regex::new(r"\$\{bin:([^}]+)\}")?;
     let (hosts, ipsets) = config.list_type().merge(&config).await?;
-    let hostlists: HashMap<String, Manifest> =
+    let hostlists: HashMap<String, (PathBuf, Manifest)> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/lists/include"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.id().clone(), m))
+            .map(|(path, m)| (m.id().clone(), (path, m)))
             .collect();
-    let hostlists_exclude: HashMap<String, Manifest> =
+    let hostlists_exclude: HashMap<String, (PathBuf, Manifest)> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/lists/exclude"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.id().clone(), m))
+            .map(|(path, m)| (m.id().clone(), (path, m)))
             .collect();
-    let ipset: HashMap<String, Manifest> =
+    let ipset: HashMap<String, (PathBuf, Manifest)> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/ipset/include"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.id().clone(), m))
+            .map(|(path, m)| (m.id().clone(), (path, m)))
             .collect();
-    let ipset_exclude: HashMap<String, Manifest> =
+    let ipset_exclude: HashMap<String, (PathBuf, Manifest)> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/ipset/exclude"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.id().clone(), m))
+            .map(|(path, m)| (m.id().clone(), (path, m)))
             .collect();
-    let lua_lib: HashMap<String, Manifest> =
+    let lua_lib: HashMap<String, (PathBuf, Manifest)> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/libs"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.id().clone(), m))
+            .map(|(path, m)| (m.id().clone(), (path, m)))
             .collect();
-    let bins: HashMap<String, Manifest> =
+    let bins: HashMap<String, (PathBuf, Manifest)> =
         get_all_manifests(&ZAPRETT_DIR_PATH.join("manifests/bin"))
             .unwrap_or_default()
             .into_iter()
-            .map(|m| (m.id().clone(), m))
+            .map(|(path, m)| (m.id().clone(), (path, m)))
             .collect();
-    let strat_modified = prepare_manifests(&start, &regex_hostlist, &hostlists, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, &hostlists_exclude, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset, &ipset, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset_exclude, &ipset_exclude, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_libsdir, &lua_lib, &tmp_dir)?;
-    let strat_modified = prepare_manifests(&strat_modified, &regex_bindir, &bins, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&start, &regex_hostlist, strategy_manifest.as_ref(), &hostlists, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_hostlist_exclude, strategy_manifest.as_ref(), &hostlists_exclude, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset, strategy_manifest.as_ref(), &ipset, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_ipset_exclude, strategy_manifest.as_ref(), &ipset_exclude, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_libsdir, strategy_manifest.as_ref(), &lua_lib, &tmp_dir)?;
+    let strat_modified = prepare_manifests(&strat_modified, &regex_bindir, strategy_manifest.as_ref(), &bins, &tmp_dir)?;
     let strat_modified = regex_hostlists.replace_all(&strat_modified, &hosts);
     let strat_modified = regex_ipsets.replace_all(&strat_modified, &ipsets);
     let strat_modified = strat_modified.into_owned();
