@@ -1,19 +1,21 @@
 ### dns.geohide.ru: hosts file
-# Последнее обновление: 11 января 2026
+# Последнее обновление: 19 февраля 2026
 # Домены взяты из этих источников:
 # https://dns.geohide.ru:8443
 # https://info.dns.malw.link/hosts
 # https://iplist.opencck.org/ru
 # https://freedom.mafioznik.xyz/file/hosts
-# Серверы ниже принадлежат GeoHide DNS:
+# Только эти серверы принадлежат GeoHide DNS:
 # 45.155.204.190
 # 95.182.120.241
+# 31.25.239.132
 # В итоговом hosts указанно меньше сайтов чем проксируется через DNS.
 
 # Работающие IP без прокси
 127.0.0.1 localhost
 ::1 ip6-localhost
 130.255.77.28 ntc.party
+2a02:e00:ffec:4b8::1 ntc.party
 157.240.245.174 instagram.com
 157.240.245.174 www.instagram.com
 157.240.245.174 b.i.instagram.com
@@ -1576,19 +1578,21 @@
 95.182.120.241 www.strava.com
 
 # Supercell
-144.31.14.104 accounts.supercell.com
-144.31.14.104 cdn.id.supercell.com
-144.31.14.104 clashofclans.inbox.supercell.com
-185.36.125.240 game.brawlstarsgame.com
-185.36.125.245 game.clashroyaleapp.com
-45.95.233.23 game.mocogame.com
-185.36.125.241 game.squadbustersgame.com
-144.31.14.104 game-assets.brawlstarsgame.com
-185.246.223.127 game-assets.clashofclans.com
-185.246.223.127 game-assets.clashroyaleapp.com
-185.36.125.244 gamea.clashofclans.com
-144.31.14.104 security.id.supercell.com
-144.31.14.104 store.supercell.com
+179.43.148.133 game.brawlstarsgame.com
+31.25.239.132 accounts.supercell.com
+31.25.239.132 cdn.id.supercell.com
+31.25.239.132 clashofclans.inbox.supercell.com
+31.25.239.132 game-assets.brawlstarsgame.com
+31.25.239.132 game-assets.clashofclans.com
+31.25.239.132 game-assets.clashroyaleapp.com
+31.25.239.132 game.boombeachgame.com
+31.25.239.132 game.mocogame.com
+31.25.239.132 security.id.supercell.com
+31.25.239.132 store.supercell.com
+31.7.60.154 game.clashroyaleapp.com
+31.7.60.155 gamea.clashofclans.com
+31.7.60.156 game.squadbustersgame.com
+31.7.60.157 game.mocogame.com
 
 # Tableau
 45.155.204.190 tableau.com
