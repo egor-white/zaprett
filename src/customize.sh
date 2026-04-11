@@ -14,7 +14,7 @@ ui_print "####################"
 ui_print "Moving old folder (if exists)"
 PROP_FILE="/data/adb/modules/zaprett/module.prop"
 if [ -f "$PROP_FILE" ]; then
-    source "$PROP_FILE"
+    versionCode=$(grep "^versionCode=" "$PROP_FILE" | cut -d= -f2)
 
     if [ -n "$versionCode" ] && [ "$versionCode" -le 65 ]; then
         mv /sdcard/zaprett /sdcard/zaprett-old
